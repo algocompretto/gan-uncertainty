@@ -8,7 +8,7 @@ def npy_loader(path):
     return sample
 
 dataset = torchvision.datasets.DatasetFolder(
-        root="data",
+        root="dataset",
         loader = npy_loader,
         extensions=(".npy")
         )
