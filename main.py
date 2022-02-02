@@ -1,16 +1,8 @@
-import torch
-import torchvision
-import numpy as np
-from torchvision.utils import save_image
-
-def npy_loader(path):
-    sample = torch.from_numpy(np.load(path))
-    return sample
-
-dataset = torchvision.datasets.DatasetFolder(
-        root="dataset",
-        loader = npy_loader,
-        extensions=(".npy")
-        )
-
-print(dataset)
+from keras.models import Sequential
+from keras.optimizers import Adam
+from keras.layers import Dense
+from keras.layers import Conv2D
+from keras.layers import Flatten
+from keras.layers import Dropout
+from keras.layers import LeakyReLU
+from keras.utils.vis_utils import plot_model
