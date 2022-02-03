@@ -54,6 +54,7 @@ os.makedirs("results", exist_ok=True)
 # Training the DCGANs
 
 # We create a criterion object that will measure the error between the prediction and the target.
+# TODO: Use SGD for discriminator and ADAM for generator
 criterion = nn.BCELoss()
 optimizerD = optim.Adam(netD.parameters(), lr=0.001,
                         betas=(0.5, 0.999))
