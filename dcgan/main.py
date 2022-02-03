@@ -14,7 +14,7 @@ from torchvision.datasets import ImageFolder
 import cv2
 
 from generator import G
-
+from discriminator import D
 
 # Setting some hyperparameters
 batchSize = 1  # We set the size of the batch.
@@ -44,3 +44,8 @@ def weights_init(m):
 # Creating the generator
 netG = G()  # We create the generator object.
 netG.apply(weights_init)  # We initialize all the weights of its neural network.
+
+
+# Creating the discriminator
+netD = D() # We create the discriminator object.
+netD.apply(weights_init) # We initialize all the weights of its neural network.
