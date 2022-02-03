@@ -19,7 +19,6 @@ class Generator(nn.Module):
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Dropout(0.5),
-            nn.LeakyReLU(0.2, inplace=True),
             nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False),
             nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2, inplace=True),
