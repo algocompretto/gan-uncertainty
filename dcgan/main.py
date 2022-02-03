@@ -21,7 +21,7 @@ transform = transforms.Compose([transforms.Resize((imageSize, imageSize)), trans
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # Loading the dataset
-dataset = ImageFolder('/dataset/', transform=transform)
+dataset = ImageFolder("../dataset", transform=transform)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=batchSize, shuffle=True,
                                           num_workers=2)
 
@@ -106,6 +106,6 @@ for epoch in range(num_epochs):
         if i % 100 == 0:
             # 3rd Step: Printing the losses and saving the real images and the generated images of the batch every 100 steps
             print(f'[{epoch} {num_epochs}] [{i} {len(data_loader)}] Loss_D: {errD.data:.4f} Loss_G: {errG.data:.4f}')
-            vutils.save_image(real, '/results/real_samples.png', normalize=True)
+            vutils.save_image(real, 'results/real_samples.png', normalize=True)
             fake = netG(noise)
-            vutils.save_image(fake.data, f'./results/fake_samples_epoch_{epoch:05d}.png', normalize=True)
+            vutils.save_image(fake.data, f'results/fake_samples_epoch_{epoch:05d}.png', normalize=True)
