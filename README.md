@@ -1,10 +1,10 @@
 <h1 align="center">
-    Name of The Project
+    Use of Generative Deep Learning for Reservoir Characterization
 </h1>
 <details>
   <summary>🇺🇸 English version</summary>
 
-  <p align="center"> Project information - Hub Tech </p>
+  <p align="center"> Project information </p>
 
   <p align="center">
   <a href="#objective">Objective</a> •
@@ -17,13 +17,14 @@
 
   <h2 id="objective" > 🎯 Objectives </h2>
 
-  A brief description about the project and how the project works
+  A brief description about the project and how the project works.
 
   <h2 id="technologies"> 🛠 Technologies </h2>
 
   The tools used in the construction of the project were:
 
-  - [Name Tech](UrlForTheTech)
+  - [PyTorch](https://pytorch.org/)
+  - [Python](https://www.python.org/)
 
   <h2 id="usage" > 👷 Usage </h2>
 
@@ -33,13 +34,9 @@
   # Commands used to start the project.
   ```
 
-  <h2 id="contribution"> 🤝Contribution </h2>
-
-  - [Contribution File](./CONTRIBUTING.md)
-
   <h2 id="author"> 💻 Author </h2>
 
-  By Name ❤
+  By Gustavo Pretto Scholze ❤
 
   <h2 id="license"> 📝 License </h2>
 
@@ -50,7 +47,7 @@
 <details open>
   <summary>🇧🇷 Versão em português</summary>
 
-  <p align="center"> Informações do Projeto - Hub Tech </p>
+  <p align="center"> Informações do Projeto </p>
 
   <p align="center">
   <a href="#objetivos">Objetivos</a> •
@@ -69,7 +66,8 @@
 
   As ferramentas utilizadas na construção do projeto foram:
 
-  - [Name Tech](UrlForTheTech)
+  - [PyTorch](https://pytorch.org/)
+  - [Python](https://www.python.org/)
 
   <h2 id="usos" > 👷 Como usar? </h2>
 
@@ -79,14 +77,10 @@
   # Comandos usados para iniciar o projeto.
   ```
 
-  <h2 id="contribuicao"> 🤝 Contribuições </h2>
-
-  - [Arquivo de Contribuição](./CONTRIBUTING.md)
-
 
   <h2 id="autor"> 💻 Autor </h2>
 
-  By Name ❤
+  Por Gustavo Pretto Scholze ❤
 
   <h2 id="licenca"> 📝 Licença </h2>
 
