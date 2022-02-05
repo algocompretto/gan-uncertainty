@@ -2,16 +2,49 @@
 Applying covariance to training images
 """
 import os
+import cv2
+import math
 import random
 
-import cv2
+from tqdm import tqdm
 import numpy as np
-from PIL import Image
-import tifffile as tiff
 import albumentations as A
 
 original_images_path_list = os.listdir("dataset/training_images/")
 os.makedirs("dataset/generated_images/", exist_ok=True)
+
+
+def resize_linear(image_matrix, new_height:int, new_width:int):
+    """Perform a pure-numpy linear-resampled resize of an image."""
+    output_image = np.zeros((new_height, new_width), dtype=image_matrix.dtype)
+    original_height, original_width = image_matrix.shape
+    inv_scale_factor_y = original_height/new_height
+    inv_scale_factor_x = original_width/new_width
+
+    # This is an ugly serial operation.
+    for new_y in range(new_height):
+        for new_x in range(new_width):
+            # If you had a color image, you could repeat this with all channels here.
+            # Find sub-pixels data:
+            old_x = new_x * inv_scale_factor_x
+            old_y = new_y * inv_scale_factor_y
+            x_fraction = old_x - math.floor(old_x)
+            y_fraction = old_y - math.floor(old_y)
+
+            # Sample four neighboring pixels:
+            left_upper = image_matrix[math.floor(old_y), math.floor(old_x)]
+            right_upper = image_matrix[math.floor(old_y), min(image_matrix.shape[1] - 1, math.ceil(old_x))]
+            left_lower = image_matrix[min(image_matrix.shape[0] - 1, math.ceil(old_y)), math.floor(old_x)]
+            right_lower = image_matrix[min(image_matrix.shape[0] - 1, math.ceil(old_y)), min(image_matrix.shape[1] - 1, math.ceil(old_x))]
+
+            # Interpolate horizontally:
+            blend_top = (right_upper * x_fraction) + (left_upper * (1.0 - x_fraction))
+            blend_bottom = (right_lower * x_fraction) + (left_lower * (1.0 - x_fraction))
+            # Interpolate vertically:
+            final_blend = (blend_top * y_fraction) + (blend_bottom * (1.0 - y_fraction))
+            output_image[new_y, new_x] = final_blend
+
+    return output_image
 
 
 def sp_noise(image, prob):
@@ -65,23 +98,26 @@ transform = A.Compose([
     A.HueSaturationValue(p=0.4),
 ])
 
-ignore_list = ["2D_channels.png", "bangladesh.png", "meandres.png", "strebelle.png", "strebelle_circ.png"]
+ignore_list = []
 
-for image_name in original_images_path_list:
+for image_name in tqdm(original_images_path_list):
     if image_name not in ignore_list:
         try:
             image = cv2.imread(f"dataset/training_images/{image_name}", 0)
 
-            noise_threshold = random.choice([0.1, 0.3, 0.5,0.7])
-
+            noise_threshold = random.choice([0.1, 0.3])
             noise_image = sp_noise(image, noise_threshold)
 
             print(f"Reading and augmenting image: {image_name}")
-            cv2.imwrite(f"dataset/generated_images/noise_image_{image_name}.png", noise_image)
-            # Applying augmentation with Albumentations
-            for i in range(10):
+            image_resized = resize_linear(noise_image, new_height=128, new_width=128)
+            cv2.imwrite(f"dataset/generated_images/noise_image_{image_name.replace('.png', '')}.png", image_resized)
+            # Applying augmentation
+            for i in tqdm(range(50)):
                 augmented_image = transform(image=image)['image']
-                cv2.imwrite(f"dataset/generated_images/augmented_{image_name}_{i}.png", augmented_image)
+                image_resized = resize_linear(augmented_image, new_height=128, new_width=128)
+                cv2.imwrite(f"dataset/generated_images/augmented_{image_name.replace('.png', '')}_{i}.png", image_resized)
 
-        except AttributeError as e:
-            print(f"Image {image_name} error, {e.args}.")
+        except AttributeError or cv2.error as e:
+            print(f"Image {image_name} error: {e.args}.")
+            pass
+
