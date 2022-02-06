@@ -1,23 +1,29 @@
 import torch.nn as nn
+import var
 
 
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
+        self.ngpu = var.NGPU
         self.main = nn.Sequential(
             # We create a meta module of a neural network that will contain a sequence of modules (convolutions, full connections, etc.).
-            nn.Conv2d(3, 64, 4, 2, 1, bias=False),
+            nn.Conv2d(var.NUM_CHANNELS, var.NDF, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(64, 128, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(128),  # We normalize all the features along the dimension of the batch.
+            # second layer
+            nn.Conv2d(var.NDF, var.NDF * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(var.NDF * 2),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(128, 256, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(256),  # We normalize again.
+            # third layer
+            nn.Conv2d(var.NDF * 2, var.NDF * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(var.NDF * 4),  # We normalize again.
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(256, 512, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(512),
+            # fourth layer
+            nn.Conv2d(var.NDF * 4, var.NDF * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(var.NDF * 8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(512, 1, 4, 1, 0, bias=False),
+            # last layer
+            nn.Conv2d(var.NDF * 8, 1, 4, 1, 0, bias=False),
             nn.Sigmoid()  # We apply a Sigmoid rectification to break the linearity and stay between 0 and 1.
         )
 
@@ -30,5 +36,4 @@ class Discriminator(nn.Module):
         Returns:
             Returns the output which will be a value between 0 and 1.
         """
-        output = self.main(input)
-        return output.view(-1)
+        return self.main(input)
