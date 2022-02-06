@@ -1,14 +1,14 @@
 """
 Applying covariance to training images
 """
-import os
-import cv2
 import math
+import os
 import random
 
-from tqdm import tqdm
-import numpy as np
 import albumentations as A
+import cv2
+import numpy as np
+from tqdm import tqdm
 
 original_images_path_list = os.listdir("dataset/training_images/")
 os.makedirs("dataset/generated_images/", exist_ok=True)
@@ -109,12 +109,12 @@ for image_name in tqdm(original_images_path_list):
             noise_image = sp_noise(image, noise_threshold)
 
             print(f"Reading and augmenting image: {image_name}")
-            image_resized = resize_linear(noise_image, new_height=128, new_width=128)
+            image_resized = resize_linear(noise_image, new_height=64, new_width=64)
             cv2.imwrite(f"dataset/generated_images/noise_image_{image_name.replace('.png', '')}.png", image_resized)
             # Applying augmentation
             for i in tqdm(range(50)):
                 augmented_image = transform(image=image)['image']
-                image_resized = resize_linear(augmented_image, new_height=128, new_width=128)
+                image_resized = resize_linear(augmented_image, new_height=64, new_width=64)
                 cv2.imwrite(f"dataset/generated_images/augmented_{image_name.replace('.png', '')}_{i}.png", image_resized)
 
         except AttributeError or cv2.error as e:
