@@ -1,4 +1,5 @@
 import torch.nn as nn
+
 import var
 
 
@@ -7,24 +8,24 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.ngpu = var.NGPU
         self.main = nn.Sequential(
-            # We create a meta module of a neural network that will contain a sequence of modules (convolutions, full connections, etc.).
+            # input is (var.NUM_CHANNELS) x 64 x 64
             nn.Conv2d(var.NUM_CHANNELS, var.NDF, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            # second layer
+            # state size. (var.NDF) x 32 x 32
             nn.Conv2d(var.NDF, var.NDF * 2, 4, 2, 1, bias=False),
             nn.BatchNorm2d(var.NDF * 2),
             nn.LeakyReLU(0.2, inplace=True),
-            # third layer
+            # state size. (var.NDF*2) x 16 x 16
             nn.Conv2d(var.NDF * 2, var.NDF * 4, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(var.NDF * 4),  # We normalize again.
+            nn.BatchNorm2d(var.NDF * 4),
             nn.LeakyReLU(0.2, inplace=True),
-            # fourth layer
+            # state size. (var.NDF*4) x 8 x 8
             nn.Conv2d(var.NDF * 4, var.NDF * 8, 4, 2, 1, bias=False),
             nn.BatchNorm2d(var.NDF * 8),
             nn.LeakyReLU(0.2, inplace=True),
-            # last layer
+            # state size. (var.NDF*8) x 4 x 4
             nn.Conv2d(var.NDF * 8, 1, 4, 1, 0, bias=False),
-            nn.Sigmoid()  # We apply a Sigmoid rectification to break the linearity and stay between 0 and 1.
+            nn.Sigmoid()
         )
 
     def forward(self, input):

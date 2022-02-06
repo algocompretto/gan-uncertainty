@@ -1,10 +1,13 @@
+import random
+
 import torch
 
-NUM_WORKERS = 2
+SEED = random.randint(1, 10000)
+NUM_WORKERS = 1
 BATCH_SIZE = 16
-IMAGE_SIZE = 128
+IMAGE_SIZE = 64
 NUM_CHANNELS = 3
-NZ = 128
+NZ = 64
 NGF = 64
 NDF = 64
 NUM_EPOCHS = 10
