@@ -1,6 +1,14 @@
 <h1 align="center">
     Simulating reservoir imagery with Deep Generative Networks 
 </h1>
+
+
+<a href="video_geradas.mp4" title="Generated GAN images">
+  <p align="center">
+    <img width="25%" src="MPS_DCGAN.gif" alt="Generated GAN images"/>
+  </p>
+</a>
+
 <details>
   <summary>🇺🇸 English version</summary>
 
