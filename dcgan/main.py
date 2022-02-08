@@ -26,7 +26,7 @@ transform = transforms.Compose([transforms.Resize((var.IMAGE_SIZE, var.IMAGE_SIZ
                                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # Loading the dataset
-dataset = ImageFolder("../dataset2", transform=transform)
+dataset = ImageFolder("../dataset", transform=transform)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=var.BATCH_SIZE, shuffle=True,
                                           num_workers=var.NUM_WORKERS)
 
