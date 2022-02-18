@@ -17,7 +17,7 @@ transform = A.Compose([
         A.SafeRotate(),
         A.ShiftScaleRotate()
     ], p=0.6),
-    A.GaussNoise(p=0.4),
+    A.GaussNoise(p=0.5),
     A.Cutout(num_holes=100, max_h_size=64, max_w_size=64),
     A.OneOf([
         A.CLAHE(clip_limit=2),
