@@ -11,28 +11,20 @@ import numpy as np
 from tqdm import tqdm
 
 transform = A.Compose([
-    A.Transpose(),
+    A.GaussianBlur(p=0.6),
     A.OneOf([
-        A.GaussianBlur(),
-        A.GaussNoise(),
-    ], p=0.8),
-    A.OneOf([
-        A.MotionBlur(p=.2),
-        A.MedianBlur(blur_limit=3, p=0.1),
-        A.Blur(blur_limit=3, p=0.1),
-    ], p=0.8),
-    A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=45, p=0.2),
-    A.OneOf([
-        A.OpticalDistortion(p=0.3),
-        A.GridDistortion(p=.1),
-        A.PiecewiseAffine(p=0.3),
-    ], p=0.5),
+        A.RandomRotate90(),
+        A.SafeRotate(),
+        A.ShiftScaleRotate()
+    ], p=0.6),
+    A.GaussNoise(p=0.5),
+    A.Cutout(num_holes=100, max_h_size=64, max_w_size=64),
     A.OneOf([
         A.CLAHE(clip_limit=2),
         A.Sharpen(),
         A.Emboss(),
         A.RandomBrightnessContrast(),
-    ], p=0.8)
+    ], p=0.8),
 ])
 
 
@@ -113,7 +105,7 @@ class DatasetAugmenter:
                 #cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
 
                 # Applying augmentation
-                for i in range(50):
+                for i in range(500):
                     augmented_image = transform(image=image)['image']
                     image_resized = resize_linear(augmented_image, new_height=64, new_width=64)
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i}.png",

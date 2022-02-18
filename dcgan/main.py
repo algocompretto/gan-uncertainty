@@ -1,12 +1,11 @@
 from __future__ import print_function
+
 import os
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 import torch.nn as nn
-import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
 import torchvision.transforms as transforms
@@ -16,7 +15,7 @@ from torchvision.datasets import ImageFolder
 import var
 from discriminator import Discriminator
 from generator import Generator
-from dcgan.augmentation import DatasetAugmenter
+from augmentation import DatasetAugmenter
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -27,10 +26,10 @@ print("[INFO] Successfully loaded images...")
 print("[INFO] Applying augmentation...")
 augmenter.run()
 
-
 # Creating the transformations (scaling, tensor conversion, normalization) to apply to the input images.
-transform = transforms.Compose([transforms.Resize((var.IMAGE_SIZE, var.IMAGE_SIZE)), transforms.ToTensor(),
-                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+transform = transforms.Compose([
+    transforms.Resize((var.IMAGE_SIZE, var.IMAGE_SIZE)), transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # Loading the dataset
 dataset = ImageFolder("../dataset", transform=transform)
@@ -51,7 +50,6 @@ def weights_init(m):
     elif class_name.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
-
 
 
 # Creating the generator and discriminator objects
