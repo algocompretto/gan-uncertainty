@@ -5,7 +5,7 @@
 
 <a href="video_geradas.mp4" title="Generated GAN images">
   <p align="center">
-    <img width="25%" src="MPS_DCGAN.gif" alt="Generated GAN images"/>
+    <img width="25%" src="movie.gif" alt="Generated GAN images"/>
   </p>
 </a>
 
