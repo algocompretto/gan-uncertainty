@@ -31,8 +31,9 @@
 
   The tools used in the construction of the project were:
 
-  - [Name Tech](UrlForTheTech)
-
+  - [Python](https://www.python.org/)
+  - [PyTorch](https://pytorch.org/)
+    
   <h2 id="usage" > 👷 Usage </h2>
 
   - Technologies needed to run locally.
@@ -65,7 +66,8 @@
 
   As ferramentas utilizadas na construção do projeto foram:
 
-  - [Name Tech](UrlForTheTech)
+  - [Python](https://www.python.org/)
+  - [PyTorch](https://pytorch.org/)
 
   <h2 id="usos" > 👷 Como usar? </h2>
 
