@@ -28,12 +28,5 @@ if option=="G2S":
     ax2.set_title('Simulation');
     ax2.axis('off');
     plt.show()
-
-#elif option=="MPSTOOLBOX":
-#    # MPS TOOLBOX
-#    import mpstool.img as mpsimg
-#
-#    # reads from GSLIB file
-#    gslib_file_path = input("Paste the GSLIB 2D filepath: ")
-#    image = mpsimg.Image.fromGslib(gslib_file_path)
-#    print(image)
+elif option=="pygeostats":
+    pass
