@@ -1,3 +1,4 @@
+"""Main loop for WDCGAN."""
 import argparse
 import os
 
@@ -12,17 +13,28 @@ from torchvision.utils import save_image
 os.makedirs("TI_generated", exist_ok=True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
-parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=64, help="size of each image dimension")
-parser.add_argument("--channels", type=int, default=1, help="number of image channels")
-parser.add_argument("--sample_interval", type=int, default=400, help="interval between image sampling")
-parser.add_argument("--rel_avg_gan", action="store_true", help="relativistic average GAN instead of standard")
+parser.add_argument("--n_epochs", type=int, default=200,
+                    help="number of epochs of training")
+parser.add_argument("--batch_size", type=int, default=64,
+                    help="size of the batches")
+parser.add_argument("--lr", type=float, default=0.0002,
+                    help="adam: learning rate")
+parser.add_argument("--b1", type=float, default=0.5,
+                    help="adam: decay of first order momentum of gradient")
+parser.add_argument("--b2", type=float, default=0.999,
+                    help="adam: decay of first order momentum of gradient")
+parser.add_argument("--n_cpu", type=int, default=1,
+                    help="number of cpu threads to use while generating batch")
+parser.add_argument("--latent_dim", type=int, default=100,
+                    help="dimensionality of the latent space")
+parser.add_argument("--img_size", type=int, default=64,
+                    help="size of each image dimension")
+parser.add_argument("--channels", type=int, default=1,
+                    help="number of image channels")
+parser.add_argument("--sample_interval", type=int, default=400,
+                    help="interval between image sampling")
+parser.add_argument("--rel_avg_gan", action="store_true",
+                    help="relativistic average GAN instead of standard")
 opt = parser.parse_args()
 print(opt)
 
@@ -34,7 +46,8 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.init_size = opt.img_size // 4
-        self.l1 = nn.Sequential(nn.Linear(opt.latent_dim, 128 * self.init_size ** 2))
+        self.l1 = nn.Sequential(nn.Linear(
+            opt.latent_dim, 128 * self.init_size ** 2))
 
         self.conv_blocks = nn.Sequential(
             nn.BatchNorm2d(128),
@@ -62,7 +75,8 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         def discriminator_block(in_filters, out_filters, bn=True):
-            block = [nn.Conv2d(in_filters, out_filters, 3, 2, 1), nn.LeakyReLU(0.2, inplace=True), nn.Dropout2d(0.25)]
+            block = [nn.Conv2d(in_filters, out_filters, 3, 2, 1),
+                     nn.LeakyReLU(0.2, inplace=True), nn.Dropout2d(0.25)]
             if bn:
                 block.append(nn.BatchNorm2d(out_filters, 0.8))
             return block
@@ -104,10 +118,13 @@ dataloader = torch.utils.data.DataLoader(
     batch_size=opt.batch_size, shuffle=True)
 
 # Optimizers
-optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+optimizer_G = torch.optim.Adam(generator.parameters(),
+                               lr=opt.lr, betas=(opt.b1, opt.b2))
+optimizer_D = torch.optim.Adam(discriminator.parameters(),
+                               lr=opt.lr, betas=(opt.b1, opt.b2))
 
-Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() \
+    else torch.FloatTensor
 
 # ----------
 #  Training
@@ -117,8 +134,10 @@ for epoch in range(opt.n_epochs):
     for i, (imgs, _) in enumerate(dataloader):
 
         # Adversarial ground truths
-        valid = Variable(Tensor(imgs.shape[0], 1).fill_(1.0), requires_grad=False)
-        fake = Variable(Tensor(imgs.shape[0], 1).fill_(0.0), requires_grad=False)
+        valid = Variable(Tensor(imgs.shape[0], 1).fill_(1.0),
+                         requires_grad=False)
+        fake = Variable(Tensor(imgs.shape[0], 1).fill_(0.0),
+                        requires_grad=False)
 
         # Configure input
         real_imgs = Variable(imgs.type(Tensor))
@@ -130,7 +149,8 @@ for epoch in range(opt.n_epochs):
         optimizer_G.zero_grad()
 
         # Sample noise as generator input
-        z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
+        z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0],
+                                                    opt.latent_dim))))
 
         # Generate a batch of images
         gen_imgs = generator(z)
@@ -139,7 +159,8 @@ for epoch in range(opt.n_epochs):
         fake_pred = discriminator(gen_imgs)
 
         if opt.rel_avg_gan:
-            g_loss = adversarial_loss(fake_pred - real_pred.mean(0, keepdim=True), valid)
+            g_loss = adversarial_loss(
+                fake_pred - real_pred.mean(0, keepdim=True), valid)
         else:
             g_loss = adversarial_loss(fake_pred - real_pred, valid)
 
@@ -160,8 +181,10 @@ for epoch in range(opt.n_epochs):
         fake_pred = discriminator(gen_imgs.detach())
 
         if opt.rel_avg_gan:
-            real_loss = adversarial_loss(real_pred - fake_pred.mean(0, keepdim=True), valid)
-            fake_loss = adversarial_loss(fake_pred - real_pred.mean(0, keepdim=True), fake)
+            real_loss = adversarial_loss(
+                real_pred - fake_pred.mean(0, keepdim=True), valid)
+            fake_loss = adversarial_loss(
+                fake_pred - real_pred.mean(0, keepdim=True), fake)
         else:
             real_loss = adversarial_loss(real_pred - fake_pred, valid)
             fake_loss = adversarial_loss(fake_pred - real_pred, fake)
@@ -173,9 +196,11 @@ for epoch in range(opt.n_epochs):
 
         print(
             "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
-            % (epoch, opt.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item())
+            % (epoch, opt.n_epochs, i, len(dataloader), d_loss.item(),
+               g_loss.item())
         )
 
         batches_done = epoch * len(dataloader) + i
         if batches_done % opt.sample_interval == 0:
-            save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
+            save_image(gen_imgs.data[:25], "images/%d.png" % batches_done,
+                       nrow=5, normalize=True)
