@@ -1,10 +1,9 @@
-import os
 import math
+import os
 from typing import Tuple, Any
 
-import numpy as np
 import cv2
-from PIL import Image
+import numpy
 
 
 def complete_square_image(img, size: int) -> Any:
@@ -19,12 +18,12 @@ def complete_square_image(img, size: int) -> Any:
         Returns the completed image
     """
     if img.shape[0] < size:
-        strip = np.zeros((size - img.shape[0], img.shape[1], 3), dtype=np.int8)
-        img = np.vstack((img, strip))
+        strip = numpy.zeros((size - img.shape[0], img.shape[1], 3), dtype=numpy.int8)
+        img = numpy.vstack((img, strip))
 
     if img.shape[1] < size:
-        strip = np.zeros((img.shape[0], size - img.shape[1], 3), dtype=np.int8)
-        img = np.hstack((img, strip))
+        strip = numpy.zeros((img.shape[0], size - img.shape[1], 3), dtype=numpy.int8)
+        img = numpy.hstack((img, strip))
 
     return img
 
@@ -54,7 +53,7 @@ def yield_cropped_image(image, crop_size: int = 64, stride: int = 32) -> Tuple[i
             yield x_min, y_min, cropped_image
 
 
-def saves_sliding_windows(image, crop_size: int = 64, stride: int = 32) -> None:
+def saves_sliding_windows(image, crop_size: int = 64, stride: int = 16) -> None:
     """
     Slides through image to save each square.
 
@@ -73,16 +72,6 @@ def saves_sliding_windows(image, crop_size: int = 64, stride: int = 32) -> None:
         print(err.args)
 
 
-strebelle_string = "https://github.com/GAIA-UNIL/TrainingImagesTIFF/blob/master/strebelle.tiff"
+original_TI = cv2.imread(r"C:\Users\gustavo.scholze\gan-for-mps\TI\strebelle.png")
 
-png = Image.open(strebelle_string)
-png.load()  # required for png.split()
-background = Image.new("RGB", png.size, (255, 255, 255))
-background.paste(png, mask=png.split()[3])  # 3 is the alpha channel
-
-# background.save('strebelle.jpg', 'JPEG', quality=80)
-
-#original_TI = Image.open(r"C:\Users\gustavo.scholze\gan-for-mps\TI\strebelle.tiff")
-#original_TI = np.asarray(original_TI)
-
-#saves_sliding_windows(original_TI)
+saves_sliding_windows(original_TI)
