@@ -20,8 +20,8 @@ from augmentation import DatasetAugmenter
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 print("[INFO] Loading and augmenting training images...")
-augmenter = DatasetAugmenter(images_dir="../training_images",
-                             output_dir="../dataset/generated_images")
+augmenter = DatasetAugmenter(images_dir="../TI",
+                             output_dir="../TI_generated/generated_images")
 print("[INFO] Successfully loaded images...")
 print("[INFO] Applying augmentation...")
 augmenter.run()
@@ -31,8 +31,8 @@ transform = transforms.Compose([
     transforms.Resize((var.IMAGE_SIZE, var.IMAGE_SIZE)), transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-# Loading the dataset
-dataset = ImageFolder("../dataset", transform=transform)
+# Loading the TI_generated
+dataset = ImageFolder("../TI_generated", transform=transform)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=var.BATCH_SIZE, shuffle=True,
                                           num_workers=var.NUM_WORKERS)
 
@@ -161,7 +161,7 @@ for epoch in range(var.NUM_EPOCHS):
                 fig.add_axes(ax)
                 ax.imshow(arr)
 
-                plt.savefig(f"../GAN_results/{epoch}_{iteration}.png", dpi=dpi)
+                plt.savefig(f"../TIs/{epoch}_{iteration}.png", dpi=dpi)
 
         if (iteration % 100 == 0) or ((epoch == var.NUM_EPOCHS - 1) and (i == len(data_loader) - 1)):
             with torch.no_grad():

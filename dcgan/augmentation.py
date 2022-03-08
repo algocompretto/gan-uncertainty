@@ -12,19 +12,7 @@ from tqdm import tqdm
 
 transform = A.Compose([
     A.GaussianBlur(p=0.6),
-    A.OneOf([
-        A.RandomRotate90(),
-        A.SafeRotate(),
-        A.ShiftScaleRotate()
-    ], p=0.6),
     A.GaussNoise(p=0.5),
-    A.Cutout(num_holes=100, max_h_size=64, max_w_size=64),
-    A.OneOf([
-        A.CLAHE(clip_limit=2),
-        A.Sharpen(),
-        A.Emboss(),
-        A.RandomBrightnessContrast(),
-    ], p=0.8),
 ])
 
 
@@ -102,7 +90,7 @@ class DatasetAugmenter:
 
                 print(f"Reading and augmenting image: {image_name}")
                 image_resized = resize_linear(noise_image, new_height=64, new_width=64)
-                #cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
+                cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
 
                 # Applying augmentation
                 for i in range(500):
