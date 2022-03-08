@@ -1,3 +1,4 @@
+import os
 import math
 from typing import Tuple, Any
 
@@ -62,22 +63,26 @@ def saves_sliding_windows(image, crop_size: int = 64, stride: int = 32) -> None:
         crop_size: desired image crop size
         stride: desired stride, the vertical pixel translation
     """
-    print("[INFO] Saving in sliding windows")
+    print("[INFO] Saving in sliding windows...")
+    path = r"C:\Users\gustavo.scholze\gan-for-mps\TI_generated"
     try:
         for x_tl, y_tl, crop in yield_cropped_image(image, crop_size=crop_size, stride=stride):
-            cv2.imwrite(f"TI_generated/TI_{x_tl}_{y_tl}.png", crop)
+            path_saving = os.path.join(path, f"TI_{x_tl}_{y_tl}.png")
+            cv2.imwrite(path_saving, crop)
     except Exception as err:
         print(err.args)
 
 
-# png = Image.open(r"C:\Users\gustavo.scholze\gan-for-mps\TI\strebelle.png")
-# png.load()  # required for png.split()
-# background = Image.new("RGB", png.size, (255, 255, 255))
-# background.paste(png, mask=png.split()[3])  # 3 is the alpha channel
+strebelle_string = "https://github.com/GAIA-UNIL/TrainingImagesTIFF/blob/master/strebelle.tiff"
+
+png = Image.open(strebelle_string)
+png.load()  # required for png.split()
+background = Image.new("RGB", png.size, (255, 255, 255))
+background.paste(png, mask=png.split()[3])  # 3 is the alpha channel
 
 # background.save('strebelle.jpg', 'JPEG', quality=80)
 
-original_TI = Image.open(r"C:\Users\gustavo.scholze\gan-for-mps\TI\strebelle.jpg")
-original_TI = np.asarray(original_TI)
+#original_TI = Image.open(r"C:\Users\gustavo.scholze\gan-for-mps\TI\strebelle.tiff")
+#original_TI = np.asarray(original_TI)
 
-saves_sliding_windows(original_TI)
+#saves_sliding_windows(original_TI)
