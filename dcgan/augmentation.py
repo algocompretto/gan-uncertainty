@@ -15,6 +15,7 @@ transform = A.Compose([
     A.ShiftScaleRotate(p=0.5),
     A.GaussNoise(p=0.5),
     A.Cutout(num_holes=20, max_h_size=64, max_w_size=64),
+    A.GaussNoise(p=0.5),
 ])
 
 
@@ -92,7 +93,7 @@ class DatasetAugmenter:
 
                 print(f"Reading and augmenting image: {image_name}")
                 image_resized = resize_linear(noise_image, new_height=64, new_width=64)
-                #cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
+                cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
 
                 # Applying augmentation
                 for i in range(500):
