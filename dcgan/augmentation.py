@@ -14,7 +14,7 @@ transform = A.Compose([
     A.GaussianBlur(p=0.6),
     A.ShiftScaleRotate(p=0.5),
     A.GaussNoise(p=0.5),
-    A.Cutout(num_holes=20, max_h_size=64, max_w_size=64),
+    A.Cutout(num_holes=10, max_h_size=64, max_w_size=64),
     A.GaussNoise(p=0.5),
 ])
 

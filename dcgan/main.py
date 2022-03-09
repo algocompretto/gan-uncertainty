@@ -161,7 +161,7 @@ for epoch in range(var.NUM_EPOCHS):
                 fig.add_axes(ax)
                 ax.imshow(arr)
 
-                plt.savefig(f"C:\\Users\\gustavo.scholze\\gan-for-mps\\TI_generated"/{epoch}_{iteration}.png", dpi=dpi)
+                plt.savefig(f"C:\\Users\\gustavo.scholze\\gan-for-mps\\TI_generated/{epoch}_{iteration}.png", dpi=dpi)
 
         if (iteration % 100 == 0) or ((epoch == var.NUM_EPOCHS - 1) and (i == len(data_loader) - 1)):
             with torch.no_grad():
