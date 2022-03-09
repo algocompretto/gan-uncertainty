@@ -12,19 +12,9 @@ from tqdm import tqdm
 
 transform = A.Compose([
     A.GaussianBlur(p=0.6),
-    A.OneOf([
-        A.RandomRotate90(),
-        A.SafeRotate(),
-        A.ShiftScaleRotate()
-    ], p=0.6),
+    A.ShiftScaleRotate(p=0.5),
     A.GaussNoise(p=0.5),
-    A.Cutout(num_holes=100, max_h_size=64, max_w_size=64),
-    A.OneOf([
-        A.CLAHE(clip_limit=2),
-        A.Sharpen(),
-        A.Emboss(),
-        A.RandomBrightnessContrast(),
-    ], p=0.8),
+    A.Cutout(num_holes=20, max_h_size=64, max_w_size=64),
 ])
 
 
@@ -111,6 +101,6 @@ class DatasetAugmenter:
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i}.png",
                                 image_resized)
 
-            except (AttributeError, cv2.error) as e:
+            except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")
                 pass

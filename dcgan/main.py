@@ -20,7 +20,7 @@ from augmentation import DatasetAugmenter
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 print("[INFO] Loading and augmenting training images...")
-augmenter = DatasetAugmenter(images_dir="../training_images",
+augmenter = DatasetAugmenter(images_dir=r"C:\Users\gustavo.scholze\gan-for-mps\training_images",
                              output_dir="../dataset/generated_images")
 print("[INFO] Successfully loaded images...")
 print("[INFO] Applying augmentation...")
