@@ -1,18 +1,13 @@
 import argparse
 import os
+
 import numpy as np
-import math
-
-import torchvision.transforms as transforms
-from torchvision.utils import save_image
-
-from torch.utils.data import DataLoader
-from torchvision import datasets
-from torch.autograd import Variable
-
-import torch.nn as nn
-import torch.nn.functional as F
 import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+from torch.autograd import Variable
+from torchvision.datasets import ImageFolder
+from torchvision.utils import save_image
 
 os.makedirs("TI_generated", exist_ok=True)
 
@@ -99,19 +94,14 @@ generator = Generator().to(device)
 discriminator = Discriminator().to(device)
 
 # Configure data loader
-os.makedirs("../../data/mnist", exist_ok=True)
+os.makedirs("images/", exist_ok=True)
+
 dataloader = torch.utils.data.DataLoader(
-    datasets.MNIST(
-        "../../data/mnist",
-        train=True,
-        download=True,
-        transform=transforms.Compose(
-            [transforms.Resize(opt.img_size), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])]
-        ),
-    ),
-    batch_size=opt.batch_size,
-    shuffle=True,
-)
+    ImageFolder("../TI_generated",
+                transform=transforms.Compose(
+                    [transforms.Resize(opt.img_size), transforms.ToTensor(),
+                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
+    batch_size=opt.batch_size, shuffle=True)
 
 # Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
