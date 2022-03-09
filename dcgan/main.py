@@ -20,8 +20,8 @@ from augmentation import DatasetAugmenter
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 print("[INFO] Loading and augmenting training images...")
-augmenter = DatasetAugmenter(images_dir="../TI",
-                             output_dir="../TI_generated/generated_images")
+augmenter = DatasetAugmenter(images_dir=r"C:\Users\gustavo.scholze\gan-for-mps\TI",
+                             output_dir=r"C:\Users\gustavo.scholze\gan-for-mps\TI_augmented\data")
 print("[INFO] Successfully loaded images...")
 print("[INFO] Applying augmentation...")
 augmenter.run()
@@ -32,7 +32,7 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # Loading the TI_generated
-dataset = ImageFolder("../TI_generated", transform=transform)
+dataset = ImageFolder(r"C:\Users\gustavo.scholze\gan-for-mps\TI_augmented", transform=transform)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=var.BATCH_SIZE, shuffle=True,
                                           num_workers=var.NUM_WORKERS)
 
@@ -64,7 +64,7 @@ if (var.DEVICE.type == "cuda") and (var.NGPU > 1):
 netG.apply(weights_init)
 netD.apply(weights_init)
 
-os.makedirs("../GAN_results", exist_ok=True)
+os.makedirs(r"C:\Users\gustavo.scholze\gan-for-mps\TI_generated", exist_ok=True)
 
 fixed_noise = torch.randn(var.IMAGE_SIZE, var.NZ, 1, 1, device=var.DEVICE)
 real_label = 1.
@@ -161,7 +161,7 @@ for epoch in range(var.NUM_EPOCHS):
                 fig.add_axes(ax)
                 ax.imshow(arr)
 
-                plt.savefig(f"../TIs/{epoch}_{iteration}.png", dpi=dpi)
+                plt.savefig(f"C:\\Users\\gustavo.scholze\\gan-for-mps\\TI_generated"/{epoch}_{iteration}.png", dpi=dpi)
 
         if (iteration % 100 == 0) or ((epoch == var.NUM_EPOCHS - 1) and (i == len(data_loader) - 1)):
             with torch.no_grad():
@@ -175,5 +175,3 @@ for epoch in range(var.NUM_EPOCHS):
     for i in range(0, 100):
         with torch.no_grad():
             fake = netG(fixed_noise).detach().cpu()
-
-    print(f"[INFO] Generated 100 images: {time.time() - t}")
