@@ -1,6 +1,6 @@
 import math
 import os
-from typing import Tuple, Any, List
+from typing import Tuple, Any, List, Generator
 
 import cv2
 import numpy
@@ -13,7 +13,7 @@ class DatasetCreator:
         self.crop_size: int = crop_size
         self.stride: int = stride
 
-    def complete_square_image(self, size: int = 64) -> Any:
+    def _complete_square_image(self, size: int = 64) -> Any:
         """
         Fills image with black stripes to complete the square image shape.
         """
@@ -27,7 +27,7 @@ class DatasetCreator:
 
         return img
 
-    def yield_cropped_image(self) -> Tuple[int, int, Any]:
+    def _yield_cropped_image(self) -> Generator:
         """
         Generates crops for the input image.
         """
@@ -47,7 +47,7 @@ class DatasetCreator:
                 cropped_image = self.original_TI[y_min:y_max, x_min:x_max]
 
                 if cropped_image.shape[0] != self.crop_size or cropped_image.shape[1] != self.crop_size:
-                    cropped_image = self.complete_square_image(cropped_image, self.crop_size)
+                    cropped_image = self._complete_square_image(cropped_image, self.crop_size)
 
                 yield x_min, y_min, cropped_image
 
@@ -56,9 +56,9 @@ class DatasetCreator:
         Slides through image to save each square.
         """
         print("[INFO] Saving in sliding windows...")
-        path = r"C:\Users\gustavo.scholze\gan-for-mps\TI_generated"
+        path = r"C:\Users\gustavo.scholze\gan-for-mps\TI_generated\data"
         try:
-            for x_tl, y_tl, crop in self.yield_cropped_image():
+            for x_tl, y_tl, crop in self._yield_cropped_image():
                 path_saving = os.path.join(path, f"TI_{x_tl}_{y_tl}.png")
                 cv2.imwrite(path_saving, crop)
         except Exception as err:
