@@ -10,7 +10,16 @@ from torch.autograd import Variable
 from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
 
+from generate_TI_dataset import DatasetCreator
+
 os.makedirs("TI_generated", exist_ok=True)
+os.makedirs("TI_generated/data", exist_ok=True)
+
+dc = DatasetCreator(r"C:\Users\gustavo.scholze\gan-for-mps\TI\strebelle.png")
+print("[INFO] Creating dataset...")
+dc.saves_sliding_windows()
+print("[INFO] Dataset created!")
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=200,
@@ -39,7 +48,6 @@ opt = parser.parse_args()
 print(opt)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class Generator(nn.Module):
     def __init__(self):
@@ -111,7 +119,7 @@ discriminator = Discriminator().to(device)
 os.makedirs("images/", exist_ok=True)
 
 dataloader = torch.utils.data.DataLoader(
-    ImageFolder("../TI_generated",
+    ImageFolder("TI_generated/",
                 transform=transforms.Compose(
                     [transforms.Resize(opt.img_size), transforms.ToTensor(),
                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])),
