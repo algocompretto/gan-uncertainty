@@ -120,7 +120,7 @@ transform = transforms.Compose([
     transforms.RandomErasing(p=0.3),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-dataset = ImageFolder(r"..\data", transform=transform)
+dataset = ImageFolder(r"..\data\\", transform=transform)
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True,
                                           num_workers=opt.n_cpu)
 
