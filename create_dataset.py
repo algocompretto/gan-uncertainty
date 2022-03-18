@@ -8,6 +8,7 @@ import random
 
 import albumentations as A
 import cv2
+import torchvision.transforms as T
 import numpy as np
 from tqdm import tqdm
 
@@ -19,11 +20,13 @@ opt = parser.parse_args()
 print(opt)
 
 transform = A.Compose([
+    A.HorizontalFlip(p=0.5),
+    A.VerticalFlip(p=0.3),
+    A.RandomRotate90(p=0.4),
     A.GaussianBlur(p=0.6),
     A.ShiftScaleRotate(p=0.5),
     A.GaussNoise(p=0.5),
-    A.Cutout(num_holes=5, max_h_size=64, max_w_size=64),
-    A.GaussNoise(p=0.5),
+    A.Cutout(num_holes=10, max_h_size=16, max_w_size=16)
 ])
 
 
