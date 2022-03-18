@@ -10,8 +10,13 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
+import var
+
 transform = A.Compose([
     A.GaussianBlur(p=0.6),
+    A.ShiftScaleRotate(p=0.5),
+    A.GaussNoise(p=0.5),
+    A.Cutout(num_holes=10, max_h_size=64, max_w_size=64),
     A.GaussNoise(p=0.5),
 ])
 
@@ -89,16 +94,16 @@ class DatasetAugmenter:
                 noise_image = sp_noise(image, noise_threshold)
 
                 print(f"Reading and augmenting image: {image_name}")
-                image_resized = resize_linear(noise_image, new_height=64, new_width=64)
+                image_resized = resize_linear(noise_image, new_height=var.IMAGE_SIZE, new_width=var.IMAGE_SIZE)
                 cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
 
                 # Applying augmentation
                 for i in range(500):
                     augmented_image = transform(image=image)['image']
-                    image_resized = resize_linear(augmented_image, new_height=64, new_width=64)
+                    image_resized = resize_linear(augmented_image, new_height=var.IMAGE_SIZE, new_width=var.IMAGE_SIZE)
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i}.png",
                                 image_resized)
 
-            except (AttributeError, cv2.error) as e:
+            except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")
                 pass

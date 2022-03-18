@@ -5,7 +5,7 @@ import torch
 SEED = random.randint(1, 10000)
 NUM_WORKERS = 1
 BATCH_SIZE = 16
-IMAGE_SIZE = 64
+IMAGE_SIZE = 150
 NUM_CHANNELS = 3
 NZ = 64
 NGF = 64
