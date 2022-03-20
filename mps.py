@@ -33,7 +33,7 @@ def initialize_mps():
   O.par['origin']=np.array([0,0,0])
   O.par['hard_data_fnam']='conditioning_data/samples50'
   O.par['simulation_grid_size']=np.array([150, 150, 1])
-  return O
+  return O  
 
 @timer
 def mps_algo(TI, O):
