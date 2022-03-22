@@ -1,12 +1,13 @@
 """
 Multiple-point statistics workflow with GAN images.
 """
-import mpslib.scikit.mpslib as mps
+from g2s import g2s
 import matplotlib.pyplot as plt
 from time import time
-import numpy as np
+import numpy
 import imageio
 import glob
+import os
 
 def timer(func):
     # This function shows the execution time of 
@@ -26,27 +27,21 @@ def plot(image, title: str):
     plt.imshow(image, cmap='gray')
     plt.show()
 
-def initialize_mps():
-  O = mps.mpslib(method='mps_snesim_tree', verbose_level=-1, debug_level=-1)
-  O.parameter_filename = 'mps.txt'
-  O.par['n_real']= 100
-  O.par['origin']=np.array([0,0,0])
-  O.par['hard_data_fnam']='conditioning_data/samples50'
-  O.par['simulation_grid_size']=np.array([150, 150, 1])
-  return O  
+image = imageio.imread('data_generated/1647486253.6988351.png')
 
-@timer
-def mps_algo(TI, O):
-    # Setting TI to memory
-    O.ti = TI
+def load_sample(sample_path: str) -> numpy.array():
+    return 
 
-    # Parallel
-    O.run()
+# create empty grid and add conditioning data
+conditioning = numpy.zeros((150, 150))*numpy.nan; 
+# fill the grid with 50 random points
+conditioning.flat[numpy.random.permutation(conditioning.size)[:50]]=image.flat[numpy.random.permutation(image.size)[:50]];
 
-for image_path in glob.glob("TI/*.png"):
-    image = imageio.imread(image_path)
-
-#plot(image, "Imagem original")
-
-mps_runner = initialize_mps()
-mps_algo(image, mps_runner)
+# QS call using G2S
+simulation,_=g2s('-a','qs', 
+                 '-ti',image,
+                 '-di',conditioning,
+                 '-dt',[0],
+                 '-k',1.2,
+                 '-n',30,
+                 '-j',0.5);
