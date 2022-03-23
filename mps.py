@@ -2,10 +2,10 @@
 Multiple-point statistics workflow with GAN images.
 """
 from g2s import g2s
+from PIL import Image
 import matplotlib.pyplot as plt
 from time import time
 import numpy as np
-import imageio
 import glob
 import os
 
@@ -20,14 +20,6 @@ def timer(func):
         return result
     return wrap_func
 
-def plot(image, title: str):
-    plt.figure(figsize=(16,9))
-    plt.axis('off')
-    plt.title(f'{title}')
-    plt.imshow(image, cmap='gray')
-    plt.show()
-
-image = imageio.imread('data_generated/1647486253.6988351.png')
 
 def read_conditional_samples(filename='eas.dat', nanval=-997799):
     debug_level = 1
@@ -104,44 +96,55 @@ def read_conditional_samples(filename='eas.dat', nanval=-997799):
 
 
 def convert_to_grid(array):
+    # Initializing variables
     map_dict = {0:1, 1:2}
     dataX = array[:, 0]
     dataY = array[:, 1]
+
     # Mapping values to categorical variables
     dataClass = np.vectorize(map_dict.get)(array[:,3])
+
+    # Creating the simulation grid
     x_, x_idx = np.unique(np.ravel(dataX), return_inverse=True)
     y_, y_idx = np.unique(np.ravel(dataY), return_inverse=True)
-    newArray = np.zeros((len(x_), len(y_)), dtype=dataClass.dtype)
+    newArray = np.zeros((len(x_), len(y_)), dtype=dataClass.dtype)*np.nan;
     newArray[x_idx, y_idx] = np.ravel(dataClass)
     return newArray
 
 
-# create the grid with conditioning data
+# Loading training image
+image = np.array(Image.open('data/augmentation_dataset/augmented_strebelle_0.png'))
+
+# Create the grid with loaded conditioning data
 conditioning_dictionary = read_conditional_samples('conditioning_data/samples50')
 conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
 
-# QS call using G2S
-simulation, _ = g2s('-a', 'qs', 
-                 '-ti', image,
-                 '-di', conditioning,
-                 '-dt', [3],
-                 '-k', 8,
-                 '-n', 36,
-                 '-j', 0.5)
+@timer
+def simulate(image, conditioning):
+    # QuickSampling call using G2S
+    simulation, _ = g2s('-a', 'qs', 
+                     '-ti', image,
+                     '-di', conditioning,
+                     '-dt', [1],
+                     '-k', 22500,
+                     '-n', 22500,
+                     '-j', 0.5,
+                     '-fs')
 
+    # Display results
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3,figsize=(16, 9),subplot_kw={'aspect':'equal'})
+    fig.suptitle('Conditional simulation with QuickSampling algorithm', size='xx-large', y=0.9)
+    ax1.imshow(image, cmap='gray')
+    ax1.set_title('Training image');
+    ax1.axis('off')
+    ax2.imshow(conditioning, cmap="seismic")
+    ax2.set_title('Conditional data');
+    ax2.axis('off');
+    ax3.imshow(simulation, cmap="gray")
+    ax3.set_title('Simulation');
+    ax3.axis('off');
+    plt.savefig('simulation.png', dpi=300)
+    plt.show()
 
-# Display results
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3,figsize=(7,4),subplot_kw={'aspect':'equal'})
-fig.suptitle('qs conditional simulation',size='xx-large',y=0.9)
-ax1.imshow(image)
-ax1.set_title('training image');
-ax1.axis('off');
-ax2.imshow(conditioning)
-ax2.set_title('conditioning');
-ax2.axis('off');
-ax3.imshow(simulation)
-ax3.set_title('simulation');
-ax3.axis('off');
-plt.savefig('simulation.png', dpi=300)
-plt.show()
+simulate(image, conditioning)
