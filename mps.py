@@ -9,6 +9,8 @@ import numpy as np
 import glob
 import os
 
+os.makedirs("simulated", exist_ok=True)
+
 def timer(func):
     # This function shows the execution time of 
     # the function object passed
@@ -111,10 +113,6 @@ def convert_to_grid(array):
     newArray[x_idx, y_idx] = np.ravel(dataClass)
     return newArray
 
-
-# Loading training image
-image = np.array(Image.open('data/augmentation_dataset/augmented_strebelle_0.png'))
-
 # Create the grid with loaded conditioning data
 conditioning_dictionary = read_conditional_samples('conditioning_data/samples50')
 conditioning = conditioning_dictionary['D']
@@ -144,7 +142,12 @@ def simulate(image, conditioning):
     ax3.imshow(simulation, cmap="gray")
     ax3.set_title('Simulation');
     ax3.axis('off');
-    plt.savefig('simulation.png', dpi=300)
+    plt.savefig(f'simulated/{time.time()}.png', dpi=300)
     plt.show()
 
-simulate(image, conditioning)
+
+path = "data/augmentation_dataset"
+for im in os.listdir(path+'/'):
+    # Loading training image
+    image = np.array(Image.open(f'{path}/{im}'))
+    simulate(image, conditioning)
