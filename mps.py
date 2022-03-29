@@ -121,8 +121,8 @@ def simulate(image, conditioning):
                      '-ti', image,
                      '-di', conditioning,
                      '-dt', [1],
-                     '-k', 150,
-                     '-n', 150,
+                     '-k', 1500,
+                     '-n', 1500,
                      '-j', 0.5,
                      '-fs')
 
