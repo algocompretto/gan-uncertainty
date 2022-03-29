@@ -154,6 +154,10 @@ conditioning = convert_to_grid(conditioning)
 path = "data_generated"
 for im in os.listdir(path+'/'):
     # Loading training image
-    image = np.array(Image.open(f'{path}/{im}'), dtype=np.uint16)
-    # TODO: Implement thresholding to image to increase the simulation accuracy
-    simulate(image, conditioning)
+    image = cv2.imread(f"{path}/{im}")
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+
+    thresh = cv2.adaptiveThreshold(blurred, 1,
+                             cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 10, 1)
+    simulate(thresh, conditioning)
