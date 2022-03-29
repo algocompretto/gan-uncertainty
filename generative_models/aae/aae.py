@@ -3,6 +3,7 @@ import os
 import numpy as np
 import math
 import itertools
+import time
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
@@ -130,7 +131,7 @@ transform = transforms.Compose([
     transforms.RandomErasing(p=0.3),
     transforms.Normalize([0.5], [0.5])])
 
-dataset = ImageFolder(r"..\data\\", transform=transform)
+dataset = ImageFolder("../../data", transform=transform)
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
 
 # Optimizers
@@ -145,9 +146,10 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 def sample_image(n_row, batches_done):
     """Saves a grid of generated digits"""
     # Sample noise
-    z = Variable(Tensor(np.random.normal(0, 1, (n_row ** 2, opt.latent_dim))))
+    z = Variable(Tensor(np.random.normal(0, 1, (n_row**2, opt.latent_dim))))
     gen_imgs = decoder(z)
-    save_image(gen_imgs.data, "images/%d.png" % batches_done, nrow=n_row, normalize=True)
+    for i in gen_imgs:
+        save_image(i.data, "images/%d.png" % time.time(), nrow=n_row, normalize=True)
 
 
 # ----------
@@ -205,4 +207,6 @@ for epoch in range(opt.n_epochs):
 
         batches_done = epoch * len(dataloader) + i
         if batches_done % opt.sample_interval == 0:
-            sample_image(n_row=10, batches_done=batches_done)
+            # Value can't be 1, because of BatchNormalization
+            # To save a single image, you need to
+            sample_image(n_row=2, batches_done=batches_done)
