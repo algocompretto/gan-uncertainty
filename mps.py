@@ -126,23 +126,11 @@ def simulate(image, conditioning):
                      '-j', 0.5,
                      '-fs')
 
-    # Display results
-    #fig, (ax1, ax2, ax3) = plt.subplots(1, 3,figsize=(16, 9),subplot_kw={'aspect':'equal'})
-    #fig.suptitle('Conditional simulation with QuickSampling algorithm', size='xx-large', y=0.9)
-    #ax1.imshow(image, cmap='gray')
-    #ax1.set_title('Training image');
-    #ax1.axis('off')
-    #ax2.imshow(conditioning, cmap="seismic")
-    #ax2.set_title('Conditional data');
-    #ax2.axis('off');
     plt.imshow(simulation, cmap="gray")
     plt.axis('off')
     plt.grid('off')
-    #ax3.set_title('Simulation');
-    #ax3.axis('off');
     plt.savefig(f'simulated/{time.time()}.png', dpi=300, bbox_inches='tight',
      transparent="True", pad_inches=0)
-    plt.show()
 
 
 # Create the grid with loaded conditioning data
@@ -156,8 +144,10 @@ for im in os.listdir(path+'/'):
     # Loading training image
     image = cv2.imread(f"{path}/{im}")
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    thresh = cv2.adaptiveThreshold(blurred, 1,
-                             cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 10, 1)
+    # Binarization
+    thresh = cv2.adaptiveThreshold(blurred, 0.5,
+                            cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 10, 1)
+
     simulate(thresh, conditioning)
