@@ -4,9 +4,8 @@ Multiple-point statistics workflow with GAN images.
 from g2s import g2s
 from PIL import Image
 import matplotlib.pyplot as plt
-from time import time
+import time
 import numpy as np
-import glob
 import os
 
 os.makedirs("simulated", exist_ok=True)
@@ -15,9 +14,9 @@ def timer(func):
     # This function shows the execution time of 
     # the function object passed
     def wrap_func(*args, **kwargs):
-        t1 = time()
+        t1 = time.time()
         result = func(*args, **kwargs)
-        t2 = time()
+        t2 = time.time()
         print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
         return result
     return wrap_func
@@ -113,10 +112,6 @@ def convert_to_grid(array):
     newArray[x_idx, y_idx] = np.ravel(dataClass)
     return newArray
 
-# Create the grid with loaded conditioning data
-conditioning_dictionary = read_conditional_samples('conditioning_data/samples50')
-conditioning = conditioning_dictionary['D']
-conditioning = convert_to_grid(conditioning)
 
 @timer
 def simulate(image, conditioning):
@@ -125,8 +120,8 @@ def simulate(image, conditioning):
                      '-ti', image,
                      '-di', conditioning,
                      '-dt', [1],
-                     '-k', 22500,
-                     '-n', 22500,
+                     '-k', 150,
+                     '-n', 150,
                      '-j', 0.5,
                      '-fs')
 
@@ -146,7 +141,12 @@ def simulate(image, conditioning):
     plt.show()
 
 
-path = "data/augmentation_dataset"
+# Create the grid with loaded conditioning data
+conditioning_dictionary = read_conditional_samples('conditioning_data/samples50')
+conditioning = conditioning_dictionary['D']
+conditioning = convert_to_grid(conditioning)
+
+path = "data/data_generated"
 for im in os.listdir(path+'/'):
     # Loading training image
     image = np.array(Image.open(f'{path}/{im}'))
