@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 import os
+import cv2
 
 os.makedirs("simulated", exist_ok=True)
 
@@ -126,18 +127,21 @@ def simulate(image, conditioning):
                      '-fs')
 
     # Display results
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3,figsize=(16, 9),subplot_kw={'aspect':'equal'})
-    fig.suptitle('Conditional simulation with QuickSampling algorithm', size='xx-large', y=0.9)
-    ax1.imshow(image, cmap='gray')
-    ax1.set_title('Training image');
-    ax1.axis('off')
-    ax2.imshow(conditioning, cmap="seismic")
-    ax2.set_title('Conditional data');
-    ax2.axis('off');
-    ax3.imshow(simulation, cmap="gray")
-    ax3.set_title('Simulation');
-    ax3.axis('off');
-    plt.savefig(f'simulated/{time.time()}.png', dpi=300)
+    #fig, (ax1, ax2, ax3) = plt.subplots(1, 3,figsize=(16, 9),subplot_kw={'aspect':'equal'})
+    #fig.suptitle('Conditional simulation with QuickSampling algorithm', size='xx-large', y=0.9)
+    #ax1.imshow(image, cmap='gray')
+    #ax1.set_title('Training image');
+    #ax1.axis('off')
+    #ax2.imshow(conditioning, cmap="seismic")
+    #ax2.set_title('Conditional data');
+    #ax2.axis('off');
+    plt.imshow(simulation, cmap="gray")
+    plt.axis('off')
+    plt.grid('off')
+    #ax3.set_title('Simulation');
+    #ax3.axis('off');
+    plt.savefig(f'simulated/{time.time()}.png', dpi=300, bbox_inches='tight',
+     transparent="True", pad_inches=0)
     plt.show()
 
 
@@ -146,8 +150,10 @@ conditioning_dictionary = read_conditional_samples('conditioning_data/samples50'
 conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
 
-path = "data/data_generated"
+
+path = "data_generated"
 for im in os.listdir(path+'/'):
     # Loading training image
-    image = np.array(Image.open(f'{path}/{im}'))
+    image = np.array(Image.open(f'{path}/{im}'), dtype=np.uint16)
+    # TODO: Implement thresholding to image to increase the simulation accuracy
     simulate(image, conditioning)
