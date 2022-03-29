@@ -147,7 +147,6 @@ for im in os.listdir(path+'/'):
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
     # Binarization
-    thresh = cv2.adaptiveThreshold(blurred, 0.5,
-                            cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 10, 1)
+    ret, th = cv2.threshold(blurred,0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    simulate(thresh, conditioning)
+    simulate(th, conditioning)
