@@ -8,6 +8,13 @@ import time
 import numpy as np
 import os
 import cv2
+from sklearn.manifold import MDS
+from matplotlib import pyplot as plt
+import sklearn.datasets as dt
+import seaborn as sns         
+import numpy as np
+from sklearn.metrics.pairwise import manhattan_distances, euclidean_distances
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 os.makedirs("simulated", exist_ok=True)
 
@@ -139,7 +146,7 @@ conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
 
 
-path = "data_generated"
+path = "data/"
 for im in os.listdir(path+'/'):
     # Loading training image
     image = cv2.imread(f"{path}/{im}")
