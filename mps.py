@@ -146,7 +146,7 @@ conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
 
 
-path = "data/"
+path = "data_generated/"
 for im in os.listdir(path+'/'):
     # Loading training image
     image = cv2.imread(f"{path}/{im}")

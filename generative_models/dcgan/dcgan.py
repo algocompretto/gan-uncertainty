@@ -83,6 +83,8 @@ class Discriminator(nn.Module):
             *discriminator_block(64, 128),
         )
 
+        # TODO: Add similarity with TI and learn from it
+
         # The height and width of downsampled image
         ds_size = opt.img_size // 2 ** 4
         self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1), nn.Sigmoid())
