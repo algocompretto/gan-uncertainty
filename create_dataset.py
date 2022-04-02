@@ -13,11 +13,13 @@ import numpy as np
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--ti_folder", type=str, default=r"C:\Users\gustavo.scholze\gan-for-mps\TI", help="training image to be augmented folder path")
-parser.add_argument("--output_folder", type=str, default="data/augmentation_dataset", help="output folder path")
+parser.add_argument("--ti_folder", type=str, default="TI/", help="training image to be augmented folder path")
+parser.add_argument("--output_folder", type=str, default="generative_models/augmented/", help="output folder path")
 parser.add_argument("--img_size", type=int, default=150, help="size of each image dimension")
 opt = parser.parse_args()
 print(opt)
+
+os.makedirs(opt.output_folder, exist_ok=True)
 
 transform = A.Compose([
     A.HorizontalFlip(p=0.5),
@@ -102,7 +104,7 @@ class DatasetAugmenter:
                 noise_threshold = random.choice([0.1, 0.3])
                 noise_image = sp_noise(image, noise_threshold)
 
-                print(f"Reading and augmenting image: {image_name}")
+                print(f"[INFO] Reading and augmenting image: {image_name}")
                 image_resized = resize_linear(noise_image, new_height=opt.img_size, new_width=opt.img_size)
                 cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
 

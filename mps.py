@@ -2,6 +2,7 @@
 Multiple-point statistics workflow with GAN images.
 """
 from g2s import g2s
+import argparse
 from PIL import Image
 import matplotlib.pyplot as plt
 import time
@@ -9,14 +10,19 @@ import numpy as np
 import os
 import cv2
 from sklearn.manifold import MDS
-from matplotlib import pyplot as plt
-import sklearn.datasets as dt
-import seaborn as sns         
+from matplotlib import pyplot as plt    
 import numpy as np
 from sklearn.metrics.pairwise import manhattan_distances, euclidean_distances
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
-os.makedirs("simulated", exist_ok=True)
+parser = argparse.ArgumentParser()
+parser.add_argument("--conditional_data", type=str, default="samples50", help="conditional data used for simulating")
+parser.add_argument("--generative_model", type=str, default="wgan", help="number of epochs of training")
+parser.add_argument("--output_folder", type=str, default=f"simulated", help="output folder for all of the simulated images")
+opt = parser.parse_args()
+print(opt)
+
+os.makedirs(f"simulated/{opt.generative_model}", exist_ok=True)
 
 def timer(func):
     # This function shows the execution time of 
@@ -128,25 +134,27 @@ def simulate(image, conditioning):
                      '-ti', image,
                      '-di', conditioning,
                      '-dt', [1],
-                     '-k', 1500,
-                     '-n', 1500,
+                     '-k', 150*150,
+                     '-n', 150*150,
                      '-j', 0.5,
                      '-fs')
 
     plt.imshow(simulation, cmap="gray")
     plt.axis('off')
     plt.grid('off')
-    plt.savefig(f'simulated/{time.time()}.png', dpi=300, bbox_inches='tight',
+    plt.savefig(f'simulated/{opt.generative_model}/{time.time()}.png', dpi=300, bbox_inches='tight',
      transparent="True", pad_inches=0)
 
 
 # Create the grid with loaded conditioning data
-conditioning_dictionary = read_conditional_samples('conditioning_data/samples50')
+print("[INFO] Loading conditional data")
+conditioning_dictionary = read_conditional_samples(f'conditioning_data/{opt.conditional_data}')
 conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
+print("[INFO] Loaded conditional data!")
 
 
-path = "data_generated/"
+path = f"generative_models/{opt.generative_model}/images/"
 for im in os.listdir(path+'/'):
     # Loading training image
     image = cv2.imread(f"{path}/{im}")
