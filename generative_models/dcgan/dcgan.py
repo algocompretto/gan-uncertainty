@@ -27,6 +27,8 @@ parser.add_argument("--sample_interval", type=int, default=400, help="interval b
 opt = parser.parse_args()
 print(opt)
 
+os.makedirs('images/')
+
 cuda = True if torch.cuda.is_available() else False
 
 def weights_init_normal(m):
