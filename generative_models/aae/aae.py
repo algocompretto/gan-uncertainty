@@ -17,8 +17,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
-os.makedirs("images", exist_ok=True)
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=16, help="size of the batches")
@@ -30,9 +28,11 @@ parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality 
 parser.add_argument("--img_size", type=int, default=150, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--sample_interval", type=int, default=100, help="interval between image sampling")
+parser.add_argument("--output_folder", type=str, default="images", help="output folder for all of the generated images")
 opt = parser.parse_args()
 print(opt)
 
+os.makedirs(opt.output_folder, exist_ok=True)
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 
 cuda = True if torch.cuda.is_available() else False
@@ -149,7 +149,7 @@ def sample_image(n_row, batches_done):
     z = Variable(Tensor(np.random.normal(0, 1, (n_row**2, opt.latent_dim))))
     gen_imgs = decoder(z)
     for i in gen_imgs:
-        save_image(i.data, "images/%d.png" % time.time(), nrow=n_row, normalize=True)
+        save_image(i.data, f"{opt.output_folder}/%d.png" % time.time(), nrow=n_row, normalize=True)
 
 
 # ----------

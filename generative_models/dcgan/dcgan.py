@@ -1,4 +1,5 @@
 import argparse
+import time 
 import os
 import numpy as np
 import math
@@ -15,17 +16,20 @@ import torch
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=10, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
+parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
+parser.add_argument("--lr", type=float, default=0.0005, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
 parser.add_argument("--img_size", type=int, default=128, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
-parser.add_argument("--sample_interval", type=int, default=400, help="interval between image sampling")
+parser.add_argument("--sample_interval", type=int, default=100, help="interval between image sampling")
+parser.add_argument("--output_folder", type=str, default="images", help="output folder for all of the generated images")
 opt = parser.parse_args()
 print(opt)
+
+os.makedirs(opt.output_folder, exist_ok=True)
 
 cuda = True if torch.cuda.is_available() else False
 
@@ -83,6 +87,8 @@ class Discriminator(nn.Module):
             *discriminator_block(64, 128),
         )
 
+        # TODO: Add similarity with TI and learn from it
+
         # The height and width of downsampled image
         ds_size = opt.img_size // 2 ** 4
         self.adv_layer = nn.Sequential(nn.Linear(128 * ds_size ** 2, 1), nn.Sigmoid())
@@ -119,7 +125,7 @@ transform = transforms.Compose([
     transforms.RandomErasing(p=0.3),
     transforms.Normalize([0.5], [0.5])])
 
-dataset = ImageFolder(r"..\data\\", transform=transform)
+dataset = ImageFolder("../../data/", transform=transform)
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
 
 # Optimizers
@@ -180,4 +186,6 @@ for epoch in range(opt.n_epochs):
 
         batches_done = epoch * len(dataloader) + i
         if batches_done % opt.sample_interval == 0:
-            save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
+            for idx, im in enumerate(gen_imgs):
+                save_image(im.data, f"{opt.output_folder}/{time.time()}.png")
+        batches_done+=1
