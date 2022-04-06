@@ -1,6 +1,7 @@
 """
 Multiple-point statistics workflow with GAN images.
 """
+import glob
 from g2s import g2s
 import argparse
 from PIL import Image
@@ -10,14 +11,14 @@ import numpy as np
 import os
 import cv2
 from sklearn.manifold import MDS
+from skimage.metrics import mean_squared_error
 from matplotlib import pyplot as plt    
 import numpy as np
-from sklearn.metrics.pairwise import manhattan_distances, euclidean_distances
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from skimage.transform import resize
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--conditional_data", type=str, default="samples50", help="conditional data used for simulating")
-parser.add_argument("--generative_model", type=str, default="wgan", help="number of epochs of training")
+parser.add_argument("--generative_model", type=str, default="aae", help="number of epochs of training")
 parser.add_argument("--output_folder", type=str, default=f"simulated", help="output folder for all of the simulated images")
 opt = parser.parse_args()
 print(opt)
@@ -127,6 +128,17 @@ def convert_to_grid(array):
     return newArray
 
 
+def load_target_ti(fname):
+    im = cv2.imread(f'TI/{fname}.png', cv2.COLOR_BGR2GRAY)
+    # Binarization
+    ret, target_img = cv2.threshold(im,0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    # Resize image
+    target_img = resize(target_img, (150,150))
+    return target_img
+
+def check_similarity(image, target_img):
+    return True if mean_squared_error(image, target_img) < 0.4 else False
+
 @timer
 def simulate(image, conditioning):
     # QuickSampling call using G2S
@@ -134,8 +146,8 @@ def simulate(image, conditioning):
                      '-ti', image,
                      '-di', conditioning,
                      '-dt', [1],
-                     '-k', 150*150,
-                     '-n', 150*150,
+                     '-k', 150,
+                     '-n', 150,
                      '-j', 0.5,
                      '-fs')
 
@@ -154,14 +166,20 @@ conditioning = convert_to_grid(conditioning)
 print("[INFO] Loaded conditional data!")
 
 
+target_image = load_target_ti('strebelle')
 path = f"generative_models/{opt.generative_model}/images/"
+
 for im in os.listdir(path+'/'):
     # Loading training image
     image = cv2.imread(f"{path}/{im}")
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
     # Binarization
-    ret, th = cv2.threshold(blurred,0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
-    simulate(th, conditioning)
+    ret, th = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+    plt.imshow(th, cmap="gray")
+    plt.savefig('test.png')
+    if check_similarity(th, target_image):
+        simulate(th, conditioning)
+    else:
+        print('Similarity coef:', mean_squared_error(image, target_image))
+        pass

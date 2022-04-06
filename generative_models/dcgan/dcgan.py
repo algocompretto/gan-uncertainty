@@ -1,3 +1,4 @@
+# TODO: Increase DCGAN training quality
 import argparse
 import time 
 import os
