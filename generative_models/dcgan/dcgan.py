@@ -1,8 +1,8 @@
+# TODO: Increase DCGAN training quality
 import argparse
 import time 
 import os
 import numpy as np
-import math
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
@@ -75,7 +75,9 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         def discriminator_block(in_filters, out_filters, bn=True):
-            block = [nn.Conv2d(in_filters, out_filters, 3, 2, 1), nn.LeakyReLU(0.2, inplace=True), nn.Dropout2d(0.25)]
+            # Added Dropout to last layer to improve image generation quality
+            # Also, using LeakyRelu activations in the discriminator to make its gradients less sparse.
+            block = [nn.Conv2d(in_filters, out_filters, 3, 2, 1), nn.LeakyReLU(0.2, inplace=True), nn.Dropout2d(0.35)]
             if bn:
                 block.append(nn.BatchNorm2d(out_filters, 0.8))
             return block
