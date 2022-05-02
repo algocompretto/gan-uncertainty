@@ -6,10 +6,7 @@ import os
 
 import albumentations as A
 import cv2
-import torchvision.transforms as T
-import numpy as np
 from tqdm import tqdm
-from skimage.transform import resize
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--ti_folder", type=str, default="data/TI", help="training image to be augmented folder path")
@@ -30,30 +27,14 @@ transform = A.Compose([
     A.Cutout(num_holes=10, max_h_size=16, max_w_size=16)
 ])
 
-def sp_noise(image, prob):
-    """
-    Add salt and pepper noise to image
-    prob: Probability of the noise
-    """
-    output = image.copy()
-    if len(image.shape) == 2:
-        black = 0
-        white = 255
-    else:
-        color_space = image.shape[2]
-        if color_space == 3:  # RGB
-            black = np.array([0, 0, 0], dtype='uint8')
-            white = np.array([255, 255, 255], dtype='uint8')
-        else:  # RGBA
-            black = np.array([0, 0, 0, 255], dtype='uint8')
-            white = np.array([255, 255, 255, 255], dtype='uint8')
-    probs = np.random.random(output.shape[:2])
-    output[probs < (prob / 2)] = black
-    output[probs > 1 - (prob / 2)] = white
-    return output
-
 
 class DatasetAugmenter:
+    """
+    `DatasetAugmenter`\n
+    Is a class to augment data in dataset by applying transforms such
+    as Horizontal/Vertical Flip, random rotation by 90 degrees,
+    Gaussian blur & noise and random cutouts.
+    """
     def __init__(self, images_dir: str, output_dir: str):
         self.original_images_path_list = os.listdir(images_dir)
         self.images_dir = images_dir
@@ -61,6 +42,9 @@ class DatasetAugmenter:
         os.makedirs(output_dir, exist_ok=True)
 
     def run(self):
+        """
+        Function to execute the image transformation and saves to output directory.
+        """
         for image_name in self.original_images_path_list:
             try:
                 image = cv2.imread(f"{self.images_dir}/{image_name}", 0)
@@ -68,7 +52,6 @@ class DatasetAugmenter:
                 # Applying augmentation
                 for i in tqdm(range(500)):
                     augmented_image = transform(image=image)['image']
-                    #image_resized = resize(augmented_image, (opt.img_size,opt.img_size))
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i}.png",
                                 augmented_image)
 

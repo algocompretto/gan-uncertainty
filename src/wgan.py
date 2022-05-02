@@ -1,54 +1,69 @@
-import os
-import argparse
-import numpy as np
-import time
-
-import torchvision.transforms as transforms
-from torchvision.utils import save_image
+from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
-import torchvision.utils as vutils
+from torchvision.utils import save_image
 from torch.autograd import Variable
 
+import torchvision.transforms as transforms
+import torchvision.utils as vutils
 import torch.nn as nn
+import numpy as np
+import argparse
 import torch
-from torch.utils.tensorboard import SummaryWriter
+import time
+import os
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=64, help="size of each image dimension")
+parser.add_argument("--img_size", type=int, default=128, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--n_critic", type=int, default=10, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
 parser.add_argument("--sample_interval", type=int, default=500, help="interval betwen image samples")
-parser.add_argument("--output_folder", type=str, default="data/temp/wgan64", help="output folder for all of the generated images")
+parser.add_argument("--output_folder", type=str, default="data/temp/wgan128", help="output folder for all of the generated images")
 parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the augmented images")
 opt = parser.parse_args()
-print(opt)
 
-writer = SummaryWriter()
-
+# Create directories
 os.makedirs(opt.output_folder, exist_ok=True)
 os.makedirs("data/logs/", exist_ok=True)
 
-img_shape = (opt.channels, opt.img_size, opt.img_size)
 
+# Summary writer to log losses and images while training
+writer = SummaryWriter(log_dir="data/logs/")
+
+img_shape = (opt.channels, opt.img_size, opt.img_size)
 cuda = True if torch.cuda.is_available() else False
 
-
 class Generator(nn.Module):
+    """
+    `Generator` extending `nn.Module` from PyTorch. \n
+    This class generates a random signal and enhances as both networks evolve.\n
+    Args:
+        nn (nn.Module): The neural network module from PyTorch.
+    """
     def __init__(self):
         super(Generator, self).__init__()
 
         def block(in_feat, out_feat, normalize=True):
+            """The building blocks for the Generator neural network.
+
+            Args:
+                in_feat (`int`): The input features
+                out_feat (`int`): Output features, the classes for shale and mud.
+                normalize (`bool`, optional): If `True` appends a `BatchNormalization1d` layer
+                    to the `Generator` instance. Defaults to True.
+
+            Returns:
+                `list`: Returns layers of accordingly.
+            """
             layers = [nn.Linear(in_feat, out_feat)]
             if normalize:
-                layers.append(nn.BatchNorm1d(out_feat, 0.8))
+                layers.append(nn.BatchNorm1d(out_feat, momentum=0.8, eps=1e-05))
             layers.append(nn.LeakyReLU(0.2, inplace=True))
             return layers            
 
@@ -62,12 +77,26 @@ class Generator(nn.Module):
         )
 
     def forward(self, z):
+        """The forward pass function to the neural network
+
+        Args:
+            z (`Tensor[]`): The tensor containing the latent space signal.
+
+        Returns:
+            `Tensor[]` : Returns the image in Tensor format.
+        """
         img = self.model(z)
         img = img.view(img.shape[0], *img_shape)
         return img
 
 
 class Discriminator(nn.Module):
+    """
+    `Discriminator` extending `nn.Module` from PyTorch. \n
+    This class discriminates a random signal and enhances as both networks evolve.\n
+    Args:
+        nn (nn.Module): The neural network module from PyTorch.
+    """
     def __init__(self):
         super(Discriminator, self).__init__()
 
@@ -80,6 +109,14 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, img):
+        """The forward pass function to the neural network
+
+        Args:
+            img (`Tensor[]`): The image tensor containing the latent space signal.
+
+        Returns:
+            `Tensor[]` : Returns the score of its originality.
+        """
         img_flat = img.view(img.shape[0], -1)
         validity = self.model(img_flat)
         return validity
@@ -110,13 +147,12 @@ optimizer_D = torch.optim.RMSprop(discriminator.parameters(), lr=opt.lr)
 
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
-# ----------
-#  Training
-# ----------
+# --------------
+#  Training step
+# --------------
 running_loss=[]
 running_epoch_loss=[]
 batches_done = 0
-
 
 for epoch in range(opt.n_epochs):
     for i, (imgs, _) in enumerate(dataloader):
@@ -126,7 +162,6 @@ for epoch in range(opt.n_epochs):
         # ---------------------
         #  Train Discriminator
         # ---------------------
-        
         optimizer_D.zero_grad()
         # Sample noise as generator input
         z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
@@ -136,7 +171,6 @@ for epoch in range(opt.n_epochs):
 
         # Adversarial loss
         loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
-
         loss_D.backward()
         optimizer_D.step()
 
@@ -155,7 +189,6 @@ for epoch in range(opt.n_epochs):
             gen_imgs = generator(z)
             # Adversarial loss
             loss_G = -torch.mean(discriminator(gen_imgs))
-
             loss_G.backward()
             optimizer_G.step()
 

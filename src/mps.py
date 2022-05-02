@@ -7,13 +7,12 @@ import matplotlib.pyplot as plt
 import time
 import os
 import cv2
-from PIL import Image
 
 from helpers.funcs import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--conditional_data", type=str, default="abc", help="conditional data used for simulating")
-parser.add_argument("--generative_model", type=str, default="wgan64", help="number of epochs of training")
+parser.add_argument("--generative_model", type=str, default="wgan128", help="number of epochs of training")
 parser.add_argument("--output_folder", type=str, default=f"../data/temp/simulated", help="output folder for all of the simulated images")
 opt = parser.parse_args()
 print(opt)
@@ -21,8 +20,11 @@ print(opt)
 os.makedirs(f"{opt.output_folder}/{opt.generative_model}", exist_ok=True)
 
 def timer(func):
-    # This function shows the execution time of 
-    # the function object passed
+    """Times the function passed as argument
+
+    Args:
+        func (`function object`): Function which you want to time.
+    """
     def wrap_func(*args, **kwargs):
         t1 = time.time()
         result = func(*args, **kwargs)
@@ -39,7 +41,7 @@ def simulate(image, conditioning):
                      '-di', conditioning,
                      '-dt', [1],
                      # Rever esses parâmetros e testar pygeostats
-                     '-k', 64,
+                     '-k', 64*64,
                      '-n', 128,
                      '-j', 0.5)
     
