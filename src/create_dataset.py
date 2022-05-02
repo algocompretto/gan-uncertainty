@@ -2,9 +2,7 @@
 Applying covariance to training images
 """
 import argparse
-import math
 import os
-import random
 
 import albumentations as A
 import cv2
@@ -66,20 +64,13 @@ class DatasetAugmenter:
         for image_name in self.original_images_path_list:
             try:
                 image = cv2.imread(f"{self.images_dir}/{image_name}", 0)
-
-                noise_threshold = random.choice([0.1, 0.3])
-                noise_image = sp_noise(image, noise_threshold)
-
                 print(f"[INFO] Reading and augmenting image: {image_name}")
-                image_resized = resize(noise_image, (opt.img_size,opt.img_size))
-                cv2.imwrite(f"{self.output_dir}/noise_image_{image_name.replace('.png', '')}.png", image_resized)
-
                 # Applying augmentation
                 for i in tqdm(range(500)):
                     augmented_image = transform(image=image)['image']
-                    image_resized = resize(augmented_image, (opt.img_size,opt.img_size))
+                    #image_resized = resize(augmented_image, (opt.img_size,opt.img_size))
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i}.png",
-                                image_resized)
+                                augmented_image)
 
             except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")

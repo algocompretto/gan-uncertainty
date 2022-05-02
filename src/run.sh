@@ -13,5 +13,3 @@ done
 python src/generative_models/$model/$model.py
 
 # Deleting temporary files
-echo "[INFO] Cleaning up temporary files"
-rm -rf data/temp/
