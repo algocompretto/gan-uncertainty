@@ -112,3 +112,10 @@ def check_similarity(image, target_img):
 
 def array_to_eas(image: np.array):
     pass
+
+def to_binary(filename):
+    image = cv2.imread(f"{filename}")
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Binarization
+    _, th = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+    return th

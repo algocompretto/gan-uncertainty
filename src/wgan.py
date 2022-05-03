@@ -1,3 +1,7 @@
+from typing import final
+
+import cv2
+from helpers.funcs import to_binary
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
@@ -212,7 +216,24 @@ for epoch in range(opt.n_epochs):
             )
 
             for idx, im in enumerate(gen_imgs):
-                save_image(im.data, f"{opt.output_folder}/{time.time()}.png")
+                filename = f"{opt.output_folder}/{time.time()}.png"
+                save_image(im.data, filename)
+                binary_image = to_binary(filename)
+
+
+                try:
+                    dataset = np.loadtxt(f"{opt.output_folder}/gan_results.out")
+                    numpy_tensor = im.data.squeeze().numpy().ravel()
+                    new_TI = np.hstack((dataset, numpy_tensor))
+
+                except FileNotFoundError:
+                    numpy_tensor = im.data.squeeze().numpy().ravel()
+                    np.savetxt(fname = f"{opt.output_folder}/gan_results.out",
+                                X=numpy_tensor,
+                                newline = os.linesep,
+                                header=f"{opt.img_size} {opt.img_size} 1\n"
+                                        "1\n"
+                                        "facies\n")
         batches_done += 1
 
 # Call flush() method to make sure that all pending events have been written to disk.
