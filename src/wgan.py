@@ -1,4 +1,3 @@
-import cv2
 from helpers.funcs import to_binary
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
@@ -7,7 +6,6 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import torchvision
-import torchvision.utils as vutils
 import torch.nn as nn
 import numpy as np
 import argparse
@@ -20,9 +18,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
+parser.add_argument("--n_cpu", type=int, default=7, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=128, help="size of each image dimension")
+parser.add_argument("--img_size", type=int, default=250, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--n_critic", type=int, default=10, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
@@ -163,8 +161,8 @@ transform = transforms.Compose([
     transforms.RandomErasing(p=0.3),
     transforms.Normalize([0.5], [0.5])])
 
-dataset = ImageFolder(f"{opt.input_folder}", transform=transform)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
+dataset_loaded = ImageFolder(f"{opt.input_folder}", transform=transform)
+dataloader = torch.utils.data.DataLoader(dataset_loaded, batch_size=opt.batch_size, shuffle=True)
 
 # Optimizers
 optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=opt.lr)
@@ -245,24 +243,16 @@ for epoch in range(opt.n_epochs):
                 binary_image = to_binary(filename)
 
                 try:
-                    dataset = np.loadtxt(f"gan_results.out")
+                    dataset = np.loadtxt(f"bin/gan_results.out")
                     numpy_tensor = binary_image.squeeze().ravel()
-                    new_TI = np.column_stack((dataset, numpy_tensor))
-                    np.savetxt(fname = "gan_results.out",
-                                X = new_TI,
-                                newline = os.linesep,
-                                header=f"{opt.img_size} {opt.img_size} 1\n"
-                                        "1\n"
-                                        "facies\n")
+                    new_TI = np.column_stack((dataset, numpy_tensor/255))
+                    np.savetxt(fname = "bin/gan_results.out",
+                                X = new_TI)
 
                 except FileNotFoundError:
                     numpy_tensor = binary_image.squeeze().ravel()
-                    np.savetxt(fname = f"gan_results.out",
-                                X=numpy_tensor,
-                                newline = os.linesep,
-                                header=f"{opt.img_size} {opt.img_size} 1\n"
-                                        "1\n"
-                                        "facies\n")
+                    np.savetxt(fname = f"bin/gan_results.out",
+                                X=numpy_tensor/255)
         batches_done += 1
 
 # Call flush() method to make sure that all pending events have been written to disk.
