@@ -2,20 +2,19 @@ from email import header
 import numpy as np
 import pygeostat as gs
 
-numpy_array = np.loadtxt("/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out")
-header_name = [f'ti_{idx}' for idx in range(numpy_array.shape[1])]
-header_name = f'\n'.join(header_name)
+#numpy_array = np.loadtxt("/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out")
+#header_name = [f'ti_{idx}' for idx in range(numpy_array.shape[1])]
+#header_name = f'\n'.join(header_name)
 
 # Save again with header
-np.savetxt(fname="/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out",
-            X=numpy_array,
-            header=f"gan_results\n{numpy_array.shape[1]}\n{header_name}", comments="")
+#np.savetxt(fname="/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out",
+#            X=numpy_array,
+#            header=f"gan_results\n{numpy_array.shape[1]}\n{header_name}", comments="")
 
-conditional_samples = "/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/samples50.out"
-generated_images = "/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out"
+#conditional_samples = "/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/samples50.out"
+#generated_images = "/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out"
 
-ti_selection_p = gs.Program("/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/ti-selector.exe")
-
+#ti_selection_p = gs.Program("/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/ti-selector.exe")
 
 parstr = """                                    Parameters
                                    ************
@@ -43,9 +42,15 @@ parstr = """                                    Parameters
  output.out                                        - output file name
 """
 
-pars = dict(conditional_samples=conditional_samples,
-            generated_images=generated_images)
+#pars = dict(conditional_samples=conditional_samples,
+#            generated_images=generated_images)
 
-ti_selection_p.run(parstr=parstr.format(**pars),
-                    nogetarg=pars)
+#ti_selection_p.run(parstr=parstr.format(**pars),
+#                    nogetarg=pars)
 
+with open("bin/output_categorical_simulated.out", 'r') as file:
+    # Convert to list of string
+    array_of_similarity = ''.join(file.readlines()).split('\n')[11].split()
+
+similarity = [float(x) for x in array_of_similarity]
+print(similarity)
