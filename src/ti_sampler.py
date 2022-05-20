@@ -1,24 +1,29 @@
-from email import header
+import os
+import operator
 import numpy as np
 import pygeostat as gs
 
-#numpy_array = np.loadtxt("/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out")
-#header_name = [f'ti_{idx}' for idx in range(numpy_array.shape[1])]
-#header_name = f'\n'.join(header_name)
+os.makedirs("data/temp/selected/", exist_ok=True)
 
-# Save again with header
-#np.savetxt(fname="/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out",
-#            X=numpy_array,
-#            header=f"gan_results\n{numpy_array.shape[1]}\n{header_name}", comments="")
+if not os.path.exists("bin/gan_results_header.out"):
+    numpy_array = np.loadtxt("bin/gan_results.out")
+    header_name = [f'ti_{idx}' for idx in range(numpy_array.shape[1])]
+    header_name = f'\n'.join(header_name)
 
-#conditional_samples = "/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/samples50.out"
-#generated_images = "/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/gan_results.out"
+    # Save again with header
+    np.savetxt(fname="bin/gan_results_header.out",
+                X=numpy_array,
+                header=f"gan_results\n{numpy_array.shape[1]}\n{header_name}", comments="")
 
-#ti_selection_p = gs.Program("/mnt/c/Users/gustavo.scholze/gan-for-mps/bin/ti-selector.exe")
+conditional_samples = "bin/samples50.out"
+generated_images = "bin/gan_results_header.out"
+output = "bin/result.out"
+
+ti_selection_p = gs.Program("bin/ti-selector.exe", parfile='param.par')
 
 parstr = """                                    Parameters
                                    ************
- 
+
  START OF PARAMETERS:
  {conditional_samples}                                       - samples datafile name
  50                                              - sample number
@@ -39,18 +44,28 @@ parstr = """                                    Parameters
  0.1                                               - acceptance threshold (continuous variables)
  0.45                                                 - training image fraction to check
  12345                                             - random seed
- output.out                                        - output file name
+ {output}                                        - output file name
 """
 
-#pars = dict(conditional_samples=conditional_samples,
-#            generated_images=generated_images)
+pars = dict(conditional_samples=conditional_samples,
+            generated_images=generated_images, output=output)
 
-#ti_selection_p.run(parstr=parstr.format(**pars),
-#                    nogetarg=pars)
+ti_selection_p.run(parstr=parstr.format(**pars))
 
-with open("bin/output_categorical_simulated.out", 'r') as file:
+with open("bin/result.out", 'r') as file:
     # Convert to list of string
     array_of_similarity = ''.join(file.readlines()).split('\n')[11].split()
 
-similarity = [float(x) for x in array_of_similarity]
-print(similarity)
+similarity = [[idx, float(x)] for idx, x in enumerate(array_of_similarity)]
+sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:10]
+
+print("Sorted similarity:", sorted_similarity)
+
+import matplotlib.pyplot as plt
+for idx, similarity in sorted_similarity:
+    nome = "data/temp/selected/teste_" + str(idx) + "_sim"+ str(round(similarity, 6))+".png"
+    
+    plt.imshow(numpy_array[:,idx].reshape(250,250), cmap="gray")
+    plt.axis('off')
+    plt.grid('off')
+    plt.savefig(nome, dpi=300, bbox_inches='tight', transparent="True", pad_inches=0)

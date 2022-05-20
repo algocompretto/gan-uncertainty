@@ -12,8 +12,8 @@ from helpers.funcs import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--conditional_data", type=str, default="abc", help="conditional data used for simulating")
-parser.add_argument("--generative_model", type=str, default="wgan128", help="number of epochs of training")
-parser.add_argument("--output_folder", type=str, default=f"../data/temp/simulated", help="output folder for all of the simulated images")
+parser.add_argument("--generative_model", type=str, default="wgan", help="number of epochs of training")
+parser.add_argument("--output_folder", type=str, default=f"data/temp/simulated", help="output folder for all of the simulated images")
 opt = parser.parse_args()
 print(opt)
 
@@ -41,7 +41,7 @@ def simulate(image, conditioning):
                      '-di', conditioning,
                      '-dt', [1],
                      # Rever esses parâmetros e testar pygeostats
-                     '-k', 64*64,
+                     '-k', 128,
                      '-n', 128,
                      '-j', 0.5)
     
@@ -54,22 +54,16 @@ def simulate(image, conditioning):
 
 # Create the grid with loaded conditioning data
 print("[INFO] Loading conditional data")
-conditioning_dictionary = read_conditional_samples("/mnt/c/Users/Gustavo Scholze/gan-for-mps/data/conditioning_data/samples50")
+conditioning_dictionary = read_conditional_samples("data/conditioning_data/samples50")
 conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
 print("[INFO] Loaded conditional data!")
 
 
 target_image = load_target_ti('strebelle')
-path = "/mnt/c/Users/Gustavo Scholze/gan-for-mps/data/temp/wgan64"
+path = "data/temp/selected"
 
 for im in os.listdir(path+'/'):
     # Loading training image
     image = cv2.imread(f"{path}/{im}")
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
-
-    # Binarization
-    ret, th = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
-    if check_similarity(th, target_image):
-        simulate(th, conditioning)
+    simulate(image, conditioning)

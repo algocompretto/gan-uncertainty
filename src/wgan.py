@@ -1,4 +1,5 @@
-from helpers.funcs import to_binary
+from cmath import inf
+from helpers.funcs import generate_images, to_binary
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
@@ -15,7 +16,7 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=100, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--n_cpu", type=int, default=7, help="number of cpu threads to use during batch generation")
@@ -25,7 +26,7 @@ parser.add_argument("--channels", type=int, default=1, help="number of image cha
 parser.add_argument("--n_critic", type=int, default=10, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
 parser.add_argument("--sample_interval", type=int, default=500, help="interval betwen image samples")
-parser.add_argument("--output_folder", type=str, default="data/temp/wgan128", help="output folder for all of the generated images")
+parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the generated images")
 parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the augmented images")
 opt = parser.parse_args()
 
@@ -176,7 +177,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 running_loss=[]
 running_epoch_loss=[]
 batches_done = 0
-
+best_loss = inf
 
 for epoch in range(opt.n_epochs):
     for i, (imgs, _) in enumerate(dataloader):
@@ -214,6 +215,9 @@ for epoch in range(opt.n_epochs):
             
             # Adversarial loss
             loss_G = -torch.mean(discriminator(gen_imgs))
+            if abs(loss_G) < best_loss:
+                # Saves the generator network
+                torch.save(generator, f"data/Generator.pth")
             loss_G.backward()
             optimizer_G.step()
 
@@ -222,38 +226,12 @@ for epoch in range(opt.n_epochs):
                 % (epoch, opt.n_epochs, batches_done % len(dataloader), len(dataloader), loss_D.item(), loss_G.item())
             )
             writer.add_scalar("gen_loss", loss_G, i)
-
-        if batches_done % opt.sample_interval== 0:
-            # create grid of images
-            img_grid = torchvision.utils.make_grid(gen_imgs.data[:16])
-            # show images
-            matplotlib_imshow(img_grid, one_channel=True)
-            # write to tensorboard
-            writer.add_image(f'fake_{epoch}', img_grid, epoch)
-
-            img_grid = torchvision.utils.make_grid(imgs.data[:16])
-            # show images
-            matplotlib_imshow(img_grid, one_channel=True)
-            # write to tensorboard
-            writer.add_image(f'real_{epoch}', img_grid, epoch)
-
-            for idx, im in enumerate(gen_imgs):
-                filename = f"{opt.output_folder}/{time.time()}.png"
-                save_image(im.data, filename)
-                binary_image = to_binary(filename)
-
-                try:
-                    dataset = np.loadtxt(f"bin/gan_results.out")
-                    numpy_tensor = binary_image.squeeze().ravel()
-                    new_TI = np.column_stack((dataset, numpy_tensor/255))
-                    np.savetxt(fname = "bin/gan_results.out",
-                                X = new_TI)
-
-                except FileNotFoundError:
-                    numpy_tensor = binary_image.squeeze().ravel()
-                    np.savetxt(fname = f"bin/gan_results.out",
-                                X=numpy_tensor/255)
         batches_done += 1
+
+
+generate_images(f"data/Generator.pth",
+                imgs.shape[0], opt.latent_dim,
+                opt.output_folder)
 
 # Call flush() method to make sure that all pending events have been written to disk.
 writer.flush()
