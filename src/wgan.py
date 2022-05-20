@@ -1,14 +1,12 @@
-from typing import final
-
-import cv2
-from helpers.funcs import to_binary
+from cmath import inf
+from helpers.funcs import generate_images, to_binary
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
 from torch.autograd import Variable
-
+import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
-import torchvision.utils as vutils
+import torchvision
 import torch.nn as nn
 import numpy as np
 import argparse
@@ -18,17 +16,17 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=100, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--n_cpu", type=int, default=1, help="number of cpu threads to use during batch generation")
+parser.add_argument("--n_cpu", type=int, default=7, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=128, help="size of each image dimension")
+parser.add_argument("--img_size", type=int, default=250, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--n_critic", type=int, default=10, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
 parser.add_argument("--sample_interval", type=int, default=500, help="interval betwen image samples")
-parser.add_argument("--output_folder", type=str, default="data/temp/wgan128", help="output folder for all of the generated images")
+parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the generated images")
 parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the augmented images")
 opt = parser.parse_args()
 
@@ -42,6 +40,28 @@ writer = SummaryWriter(log_dir="data/logs/")
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 cuda = True if torch.cuda.is_available() else False
+
+def matplotlib_imshow(img, one_channel=False):
+    if one_channel:
+        img = img.mean(dim=0)
+    img = img / 2 + 0.5     # unnormalize
+    npimg = img.numpy()
+    if one_channel:
+        plt.imshow(npimg, cmap="Greys")
+    else:
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+
+
+# helper function
+def select_n_random(data, labels, n=100):
+    '''
+    Selects n random datapoints and their corresponding labels from a dataset
+    '''
+    assert len(data) == len(labels)
+
+    perm = torch.randperm(len(data))
+    return data[perm][:n], labels[perm][:n]
+
 
 class Generator(nn.Module):
     """
@@ -142,8 +162,8 @@ transform = transforms.Compose([
     transforms.RandomErasing(p=0.3),
     transforms.Normalize([0.5], [0.5])])
 
-dataset = ImageFolder(f"{opt.input_folder}", transform=transform)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
+dataset_loaded = ImageFolder(f"{opt.input_folder}", transform=transform)
+dataloader = torch.utils.data.DataLoader(dataset_loaded, batch_size=opt.batch_size, shuffle=True)
 
 # Optimizers
 optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=opt.lr)
@@ -157,6 +177,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 running_loss=[]
 running_epoch_loss=[]
 batches_done = 0
+best_loss = inf
 
 for epoch in range(opt.n_epochs):
     for i, (imgs, _) in enumerate(dataloader):
@@ -172,9 +193,9 @@ for epoch in range(opt.n_epochs):
 
         # Generate a batch of images
         fake_imgs = generator(z).detach()
-
         # Adversarial loss
         loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
+        writer.add_scalar("dis_loss", loss_D, i)
         loss_D.backward()
         optimizer_D.step()
 
@@ -191,8 +212,12 @@ for epoch in range(opt.n_epochs):
 
             # Generate a batch of images
             gen_imgs = generator(z)
+            
             # Adversarial loss
             loss_G = -torch.mean(discriminator(gen_imgs))
+            if abs(loss_G) < best_loss:
+                # Saves the generator network
+                torch.save(generator, f"data/Generator.pth")
             loss_G.backward()
             optimizer_G.step()
 
@@ -201,40 +226,12 @@ for epoch in range(opt.n_epochs):
                 % (epoch, opt.n_epochs, batches_done % len(dataloader), len(dataloader), loss_D.item(), loss_G.item())
             )
             writer.add_scalar("gen_loss", loss_G, i)
-            writer.add_scalar("dis_loss", loss_D, i)
-
-        if batches_done % opt.sample_interval== 0:
-            writer.add_image(
-                "fake",
-                vutils.make_grid(gen_imgs.data[:10], normalize=True),
-                i
-            )
-            writer.add_image(
-                "real", 
-                vutils.make_grid(imgs.data[:10], normalize=True), 
-                i
-            )
-
-            for idx, im in enumerate(gen_imgs):
-                filename = f"{opt.output_folder}/{time.time()}.png"
-                save_image(im.data, filename)
-                binary_image = to_binary(filename)
-
-
-                try:
-                    dataset = np.loadtxt(f"{opt.output_folder}/gan_results.out")
-                    numpy_tensor = im.data.squeeze().numpy().ravel()
-                    new_TI = np.hstack((dataset, numpy_tensor))
-
-                except FileNotFoundError:
-                    numpy_tensor = im.data.squeeze().numpy().ravel()
-                    np.savetxt(fname = f"{opt.output_folder}/gan_results.out",
-                                X=numpy_tensor,
-                                newline = os.linesep,
-                                header=f"{opt.img_size} {opt.img_size} 1\n"
-                                        "1\n"
-                                        "facies\n")
         batches_done += 1
+
+
+generate_images(f"data/Generator.pth",
+                imgs.shape[0], opt.latent_dim,
+                opt.output_folder)
 
 # Call flush() method to make sure that all pending events have been written to disk.
 writer.flush()

@@ -2,6 +2,10 @@
 from skimage.metrics import mean_squared_error
 from skimage.metrics import structural_similarity as ssim
 from skimage.transform import resize
+from torchvision.utils import save_image
+from torch.autograd import Variable
+import torch
+import time
 import numpy as np
 import cv2
 import os
@@ -110,12 +114,35 @@ def check_similarity(image, target_img):
     return True if mean_squared_error(image, target_img) < 0.4 else False
     #return True if ssim(image, target_img, data_range=image.max()-image.min()) < 0.30 else False
 
-def array_to_eas(image: np.array):
-    pass
-
 def to_binary(filename):
     image = cv2.imread(f"{filename}")
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Binarization
     _, th = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
     return th
+
+def generate_images(generator_path, shape, latent_dim,output_folder):
+    # Load generator from saved model
+    generator = torch.load(generator_path)
+    generator.eval()
+
+    # Generating images for evaluation
+    z = Variable(torch.Tensor(np.random.normal(0, 1, (shape, latent_dim))))
+    gen_imgs = generator(z)
+
+    for idx, im in enumerate(gen_imgs):
+        filename = f"{output_folder}/{time.time()}.png"
+        save_image(im.data, filename)
+        binary_image = to_binary(filename)
+
+        try:
+            dataset = np.loadtxt(f"bin/gan_results.out")
+            numpy_tensor = binary_image.squeeze().ravel()
+            new_TI = np.column_stack((dataset, numpy_tensor/255))
+            np.savetxt(fname = "bin/gan_results.out",
+                        X = new_TI)
+
+        except FileNotFoundError:
+            numpy_tensor = binary_image.squeeze().ravel()
+            np.savetxt(fname = f"bin/gan_results.out",
+                        X=numpy_tensor/255)
