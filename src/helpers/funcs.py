@@ -102,11 +102,11 @@ def convert_to_grid(array):
 
 
 def load_target_ti(fname):
-    im = cv2.imread(f"/mnt/c/Users/Gustavo Scholze/gan-for-mps/data/TI/{fname}.png", cv2.COLOR_BGR2GRAY)
+    im = cv2.imread(f"data/TI/{fname}.png", cv2.COLOR_BGR2GRAY)
     # Binarization
-    ret, target_img = cv2.threshold(im,0,255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    ret, target_img = cv2.threshold(im, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     # Resize image
-    target_img = resize(target_img, (64, 64))
+    target_img = resize(target_img, (250, 250))
     return target_img
 
 

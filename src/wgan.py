@@ -16,7 +16,7 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=100, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=2, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--n_cpu", type=int, default=7, help="number of cpu threads to use during batch generation")
@@ -227,12 +227,12 @@ for epoch in range(opt.n_epochs):
             )
             writer.add_scalar("gen_loss", loss_G, i)
         batches_done += 1
-
-
+print("[INFO] Finished training the WGAN")
+print("[INFO] Generating images from Generator network")
 generate_images(f"data/Generator.pth",
                 imgs.shape[0], opt.latent_dim,
                 opt.output_folder)
-
+print("[INFO] Finished generating images")
 # Call flush() method to make sure that all pending events have been written to disk.
 writer.flush()
 
