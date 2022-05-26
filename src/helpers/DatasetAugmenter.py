@@ -5,6 +5,25 @@ import cv2
 from helpers.funcs import to_binary
 from tqdm import tqdm
 import albumentations as A
+import time
+
+from tempfile import mkdtemp
+import os.path as path
+
+def timer(func):
+    """
+    Times the function passed as argument
+
+    Args:
+        func (`function object`): Function which you want to time.
+    """
+    def wrap_func(*args, **kwargs):
+        t1 = time.time()
+        result = func(*args, **kwargs)
+        t2 = time.time()
+        print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
+        return result
+    return wrap_func
 
 transform = A.Compose([
     A.HorizontalFlip(p=0.5),
@@ -47,11 +66,20 @@ class DatasetAugmenter:
                     augmented_image = transform(image=image)['image']
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i+1}.png",
                                 augmented_image)
-                    binary_image = to_binary(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i+1}.png")
-
-                    numpy_tensor = binary_image.squeeze().ravel()
-                    np.savetxt(fname = f"data/temp/generated_binary/eas_{image_name.replace('.png', '')}_{i+1}.out",
-                                X=numpy_tensor/255)
+                    
             except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")
                 pass
+
+    def get_binary(self):
+        # count columns and images added to file
+        all_images = []
+        list_of_names = [f'ti_{idx}' for idx in range(len(os.listdir(self.output_dir)))]
+        kwargs = {key:None for key in list_of_names}
+
+        for im in tqdm(os.listdir(self.output_dir)):
+            binary_image = to_binary(self.output_dir+'/'+im)
+            binary_image = binary_image.squeeze().ravel() / 255
+            all_images.append(binary_image)
+
+        np.savez(f'data/temp/np/ti_binary', all_images, **kwargs)
