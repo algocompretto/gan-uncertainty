@@ -1,33 +1,33 @@
+import argparse
+import os
 from cmath import inf
-from helpers.funcs import generate_images, to_binary
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+import torch.nn as nn
+import torchvision.transforms as transforms
+from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
-from torchvision.utils import save_image
-from torch.autograd import Variable
-import matplotlib.pyplot as plt
-import torchvision.transforms as transforms
-import torchvision
-import torch.nn as nn
-import numpy as np
-import argparse
-import torch
-import time
-import os
 
+from helpers.funcs import generate_images
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=2, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=10, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--n_cpu", type=int, default=7, help="number of cpu threads to use during batch generation")
+parser.add_argument("--n_cpu", type=int, default=-1, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
 parser.add_argument("--img_size", type=int, default=250, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--n_critic", type=int, default=10, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
 parser.add_argument("--sample_interval", type=int, default=500, help="interval betwen image samples")
-parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the generated images")
-parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the augmented images")
+parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the "
+                                                                                "generated images")
+parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the "
+                                                                                    "augmented images")
 opt = parser.parse_args()
 
 # Create directories
@@ -233,6 +233,7 @@ generate_images(f"data/Generator.pth",
                 imgs.shape[0], opt.latent_dim,
                 opt.output_folder)
 print("[INFO] Finished generating images")
+
 # Call flush() method to make sure that all pending events have been written to disk.
 writer.flush()
 

@@ -10,6 +10,7 @@ import time
 from tempfile import mkdtemp
 import os.path as path
 
+
 def timer(func):
     """
     Times the function passed as argument
@@ -17,13 +18,16 @@ def timer(func):
     Args:
         func (`function object`): Function which you want to time.
     """
+
     def wrap_func(*args, **kwargs):
         t1 = time.time()
         result = func(*args, **kwargs)
         t2 = time.time()
-        print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
+        print(f'Function {func.__name__!r} executed in {(t2 - t1):.4f}s')
         return result
+
     return wrap_func
+
 
 transform = A.Compose([
     A.HorizontalFlip(p=0.5),
@@ -34,8 +38,8 @@ transform = A.Compose([
     A.GaussNoise(p=0.5),
     A.Cutout(num_holes=10, max_h_size=32, max_w_size=32),
     A.Compose([
-    A.OpticalDistortion(0.1, 0.1),
-    A.GridDistortion(5, 0.3, 1)
+        A.OpticalDistortion(0.1, 0.1),
+        A.GridDistortion(5, 0.3, 1)
     ]),
 ])
 
@@ -47,6 +51,7 @@ class DatasetAugmenter:
     as Horizontal/Vertical Flip, random rotation by 90 degrees,
     Gaussian blur & noise and random cutouts.
     """
+
     def __init__(self, images_dir: str, output_dir: str):
         self.original_images_path_list = os.listdir(images_dir)
         self.images_dir = images_dir
@@ -64,9 +69,9 @@ class DatasetAugmenter:
                 # Applying augmentation
                 for i in tqdm(range(500)):
                     augmented_image = transform(image=image)['image']
-                    cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i+1}.png",
+                    cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i + 1}.png",
                                 augmented_image)
-                    
+
             except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")
                 pass
@@ -74,12 +79,9 @@ class DatasetAugmenter:
     def get_binary(self):
         # count columns and images added to file
         all_images = []
-        list_of_names = [f'ti_{idx}' for idx in range(len(os.listdir(self.output_dir)))]
-        kwargs = {key:None for key in list_of_names}
 
-        for im in tqdm(os.listdir(self.output_dir)):
-            binary_image = to_binary(self.output_dir+'/'+im)
+        for idx, im in enumerate(tqdm(os.listdir(self.output_dir))):
+            binary_image = to_binary(self.output_dir + '/' + im)
             binary_image = binary_image.squeeze().ravel() / 255
             all_images.append(binary_image)
-
-        np.savez(f'data/temp/np/ti_binary', all_images, **kwargs)
+            np.savez(f'data/temp/np/ti_binary', all_images, f"ti_{idx}")

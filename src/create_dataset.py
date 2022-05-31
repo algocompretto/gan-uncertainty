@@ -22,5 +22,7 @@ augmenter = DatasetAugmenter(images_dir=opt.ti_folder,
 print("[INFO] Successfully loaded images...")
 print("[INFO] Applying augmentation...")
 augmenter.run()
+
+os.makedirs('data/temp/np', exist_ok=True)
 print("[INFO] Getting binaries...")
 augmenter.get_binary()

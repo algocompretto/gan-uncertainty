@@ -12,10 +12,10 @@ if not os.path.exists("bin/gan_results_header.out"):
 
     # Save again with header
     np.savetxt(fname="bin/gan_results_header.out",
-                X=numpy_array,
-                header=f"gan_results\n{numpy_array.shape[1]}\n{header_name}", comments="")
+               X=numpy_array,
+               header=f"gan_results\n{numpy_array.shape[1]}\n{header_name}", comments="")
 
-conditional_samples = "bin/samples50.out"
+conditional_samples = "data/conditioning_data/samples50"
 generated_images = "bin/gan_results_header.out"
 output = "bin/result.out"
 
@@ -62,10 +62,11 @@ sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)
 print("Sorted similarity:", sorted_similarity)
 
 import matplotlib.pyplot as plt
+
 for idx, similarity in sorted_similarity:
-    nome = "data/temp/selected/teste_" + str(idx) + "_sim"+ str(round(similarity, 6))+".png"
-    
-    plt.imshow(numpy_array[:,idx].reshape(250,250), cmap="gray")
+    nome = "data/temp/selected/teste_" + str(idx) + "_sim" + str(round(similarity, 6)) + ".png"
+
+    plt.imshow(numpy_array[:, idx].reshape(250, 250), cmap="gray")
     plt.axis('off')
     plt.grid('off')
     plt.savefig(nome, dpi=300, bbox_inches='tight', transparent="True", pad_inches=0)
