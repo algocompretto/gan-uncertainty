@@ -11,7 +11,7 @@ import cv2
 from helpers.funcs import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--conditional_data", type=str, default="abc", help="conditional data used for simulating")
+parser.add_argument("--conditional_data", type=str, default="data/conditioning_data/samples50", help="conditional data used for simulating")
 parser.add_argument("--generative_model", type=str, default="wgan", help="number of epochs of training")
 parser.add_argument("--output_folder", type=str, default=f"data/temp/simulated", help="output folder for all of the simulated images")
 opt = parser.parse_args()
@@ -20,7 +20,8 @@ print(opt)
 os.makedirs(f"{opt.output_folder}/{opt.generative_model}", exist_ok=True)
 
 def timer(func):
-    """Times the function passed as argument
+    """
+    Times the function passed as argument
 
     Args:
         func (`function object`): Function which you want to time.
@@ -40,9 +41,8 @@ def simulate(image, conditioning):
                      '-ti', image,
                      '-di', conditioning,
                      '-dt', [1],
-                     # Rever esses parâmetros e testar pygeostats
-                     '-k', 128,
-                     '-n', 128,
+                     '-k', 64*64,
+                     '-n', 64*64,
                      '-j', 0.5)
     
     plt.imshow(simulation, cmap="gray")
@@ -54,11 +54,10 @@ def simulate(image, conditioning):
 
 # Create the grid with loaded conditioning data
 print("[INFO] Loading conditional data")
-conditioning_dictionary = read_conditional_samples("data/conditioning_data/samples50")
+conditioning_dictionary = read_conditional_samples(opt.conditional_data)
 conditioning = conditioning_dictionary['D']
 conditioning = convert_to_grid(conditioning)
 print("[INFO] Loaded conditional data!")
-
 
 target_image = load_target_ti('strebelle')
 path = "data/temp/selected"
