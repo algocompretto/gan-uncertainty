@@ -10,7 +10,7 @@ import cv2
 import os
 
 
-def read_conditional_samples(filename='eas.dat', nanval=-997799):
+def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997799) -> object:
     debug_level = 1
     if not (os.path.isfile(filename)):
         print("Filename:'%s', does not exist" % filename)
