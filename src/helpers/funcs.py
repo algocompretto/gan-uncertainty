@@ -122,6 +122,7 @@ def to_binary(filename):
 
 
 def generate_images(generator_path, shape, latent_dim, output_folder):
+    os.makedirs(output_folder, exist_ok=True)
     # Load generator from saved model
     generator = torch.load(generator_path)
     generator.eval()
