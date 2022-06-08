@@ -106,17 +106,12 @@ def load_target_ti(fname):
     return target_img
 
 
-def check_similarity(image, target_img):
-    return True if mean_squared_error(image, target_img) < 0.4 else False
-    # return True if ssim(image, target_img, data_range=image.max()-image.min()) < 0.30 else False
-
-
 def to_binary(filename):
     image = cv2.imread(f"{filename}")
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Binarization
     _, th = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
-    return th
+    return th/255
 
 
 def generate_images(generator_path, shape, output_folder):

@@ -7,6 +7,7 @@ rm -rf data/temp/generated_binary
 
 echo "Training WGAN algorithm"
 python3 src/wgan.py
+rm -rf data/temp/augmented
 
 echo "Sampling TI images generated"
 python3 src/ti_sampler.py

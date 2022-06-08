@@ -1,23 +1,33 @@
+import os
+
 import mpslib as mps
-from helpers.funcs import *
+import numpy as np
+from tqdm import tqdm
+from helpers.funcs import to_binary
+
+os.makedirs(name='data/temp/eas', exist_ok=True)
 
 # Creating MPS instance
-O = mps.mpslib(method='mps_snesim_tree')
+MPS = mps.mpslib(method='mps_snesim_tree')
+MPS.par['n_cond']: int = 50
+MPS.par['n_real']: int = 100
+MPS.par['simulation_grid_size'][0]: int = 150
+MPS.par['simulation_grid_size'][1]: int = 150
+MPS.par['simulation_grid_size'][2]: int = 1
+MPS.par['hard_data_fnam']: str = 'data/conditioning_data/samples50'
 
-# Initializing parameters for MPS object
-TI, _ = mps.trainingimages.strebelle()
 
-O.ti = TI
+def create_eas_files(data_dir: str = 'data/temp'):
+    # Convert each image to EAS format
+    for img_filename in os.listdir(f'{data_dir}/wgan'):
+        ti_array: np.array = to_binary(f'{data_dir}/wgan/{img_filename}')
+        mps.eas.write(ti_array.ravel(),
+                      f'{data_dir}/eas/{img_filename.split(".png")[0]}.dat')
 
-O.par['n_cond'] = 50
-O.par['n_real'] = 100
-O.par['simulation_grid_size'][0]=150
-O.par['simulation_grid_size'][1]=150
-O.par['simulation_grid_size'][2]=1
-O.par['hard_data_fnam']='data/conditioning_data/samples50'
 
-O.run_parallel()
+create_eas_files()
 
-O.plot_reals()
-
-O.plot_etype()
+for ti_matrix in tqdm(os.listdir('data/temp/eas/')):
+    ti: dict = mps.eas.read(f'data/temp/eas/{ti_matrix}')
+    MPS.ti: np.array = ti['D'].reshape(150, 150, -1)
+    MPS.run()
