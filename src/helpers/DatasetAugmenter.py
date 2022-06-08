@@ -4,7 +4,7 @@ from __future__ import print_function
 import os
 import time
 
-import albumentations as A
+import albumentations as album
 import cv2
 import numpy as np
 from helpers.funcs import to_binary
@@ -67,16 +67,16 @@ def timer(func):
     return wrap_func
 
 
-transform = A.Compose([
-    A.HorizontalFlip(p=0.4),
-    A.VerticalFlip(p=0.5),
-    A.GaussianBlur(blur_limit=(3,7), always_apply=True),
-    A.ShiftScaleRotate(p=0.6),
-    A.GaussNoise(p=0.4),
-    A.Cutout(num_holes=10, max_h_size=32, max_w_size=32),
-    A.Compose([
-        A.OpticalDistortion(0.1, 0.1),
-        A.GridDistortion(5, 0.3, 1)
+transform = album.Compose([
+    album.HorizontalFlip(p=0.4),
+    album.VerticalFlip(p=0.5),
+    album.GaussianBlur(blur_limit=(3, 7), always_apply=True),
+    album.ShiftScaleRotate(p=0.6),
+    album.GaussNoise(p=0.4),
+    album.Cutout(num_holes=10, max_h_size=32, max_w_size=32),
+    album.Compose([
+        album.OpticalDistortion(0.1, 0.1),
+        album.GridDistortion(5, 0.3, 1)
     ]),
 ])
 
@@ -112,21 +112,3 @@ class DatasetAugmenter:
             except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")
                 pass
-
-    def get_binary(self):
-        os.makedirs('data/temp/np', exist_ok=True)
-        for f in os.listdir(self.output_dir):
-            if f.find(".png") != -1:
-                img = Utils.get_preprocessed_img("{}/{}".format(self.output_dir, f), 150)
-                file_name = f[:f.find(".png")]
-
-                np.savez_compressed("{}/{}".format('data/temp/np', file_name), features=img)
-                retrieve = np.load("{}/{}.npz".format('data/temp/np', file_name))["features"]
-
-                assert np.array_equal(img, retrieve)
-
-        data_all = [np.load('data/temp/np/'+fname) for fname in os.listdir('data/temp/np/')]
-        merged_data = {}
-        for data in data_all:
-            [merged_data.update({k: v}) for k, v in data.items()]
-        np.savez('output.npz', **merged_data)

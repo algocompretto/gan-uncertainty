@@ -14,7 +14,6 @@ opt = parser.parse_args()
 print(opt)
 
 os.makedirs(opt.output_folder, exist_ok=True)
-#os.makedirs("data/temp/generated_binary/", exist_ok=True)
 
 print("[INFO] Loading and augmenting training images...")
 augmenter = DatasetAugmenter(images_dir=opt.ti_folder,
