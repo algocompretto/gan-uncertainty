@@ -1,5 +1,3 @@
-from skimage.metrics import mean_squared_error
-from skimage.metrics import structural_similarity as ssim
 from skimage.transform import resize
 from torchvision.utils import save_image
 from torch.autograd import Variable
@@ -121,14 +119,14 @@ def to_binary(filename):
     return th
 
 
-def generate_images(generator_path, shape, latent_dim, output_folder):
+def generate_images(generator_path, shape, output_folder):
     os.makedirs(output_folder, exist_ok=True)
     # Load generator from saved model
     generator = torch.load(generator_path)
     generator.eval()
 
     # Generating images for evaluation
-    z = Variable(torch.Tensor(np.random.normal(0, 1, (shape, latent_dim))))
+    z = Variable(torch.Tensor(np.random.normal(0, 1, shape)))
     gen_imgs = generator(z)
 
     for idx, im in enumerate(gen_imgs):

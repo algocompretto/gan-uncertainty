@@ -57,16 +57,18 @@ with open("bin/result.out", 'r') as file:
     array_of_similarity = ''.join(file.readlines()).split('\n')[11].split()
 
 similarity = [[idx, float(x)] for idx, x in enumerate(array_of_similarity)]
-sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:10]
+try: sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:100]
+except IndexError as ie:
+    sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:50]
 
 print("Sorted similarity:", sorted_similarity)
 
 import matplotlib.pyplot as plt
 
 for idx, similarity in sorted_similarity:
-    nome = "data/temp/selected/teste_" + str(idx) + "_sim" + str(round(similarity, 6)) + ".png"
+    nome = "data/temp/selected/teste_" + str(idx) + "_sim" + str(round(similarity, 4)) + ".png"
 
-    plt.imshow(numpy_array[:, idx].reshape(250, 250), cmap="gray")
+    plt.imshow(numpy_array[:, idx].reshape(150, 150), cmap="gray")
     plt.axis('off')
     plt.grid('off')
     plt.savefig(nome, dpi=300, bbox_inches='tight', transparent="True", pad_inches=0)

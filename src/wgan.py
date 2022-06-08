@@ -2,28 +2,27 @@ import argparse
 import os
 from cmath import inf
 
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.autograd import Variable
-from torch.utils.tensorboard import SummaryWriter
 from torchvision.datasets import ImageFolder
-
 from helpers.funcs import generate_images
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=10, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=1, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--n_cpu", type=int, default=-1, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=250, help="size of each image dimension")
+parser.add_argument("--img_size", type=int, default=150, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
-parser.add_argument("--n_critic", type=int, default=10, help="number of training steps for discriminator per iter")
+parser.add_argument("--n_critic", type=int, default=5, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
-parser.add_argument("--sample_interval", type=int, default=500, help="interval betwen image samples")
+parser.add_argument("--sample_interval", type=int, default=5, help="interval between image samples")
 parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the "
                                                                                 "generated images")
 parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the "
@@ -32,11 +31,6 @@ opt = parser.parse_args()
 
 # Create directories
 os.makedirs(opt.output_folder, exist_ok=True)
-os.makedirs("data/logs/", exist_ok=True)
-
-
-# Summary writer to log losses and images while training
-writer = SummaryWriter(log_dir="data/logs/")
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 cuda = True if torch.cuda.is_available() else False
@@ -170,7 +164,6 @@ optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=opt.lr)
 optimizer_D = torch.optim.RMSprop(discriminator.parameters(), lr=opt.lr)
 
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
-
 # --------------
 #  Training step
 # --------------
@@ -179,7 +172,7 @@ running_epoch_loss=[]
 batches_done = 0
 best_loss = inf
 
-for epoch in range(opt.n_epochs):
+for epoch in tqdm(range(opt.n_epochs)):
     for i, (imgs, _) in enumerate(dataloader):
         # Configure input
         real_imgs = Variable(imgs.type(Tensor))
@@ -195,7 +188,6 @@ for epoch in range(opt.n_epochs):
         fake_imgs = generator(z).detach()
         # Adversarial loss
         loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
-        writer.add_scalar("dis_loss", loss_D, i)
         loss_D.backward()
         optimizer_D.step()
 
@@ -220,22 +212,16 @@ for epoch in range(opt.n_epochs):
                 torch.save(generator, f"data/Generator.pth")
             loss_G.backward()
             optimizer_G.step()
-
+            
             print(
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
                 % (epoch, opt.n_epochs, batches_done % len(dataloader), len(dataloader), loss_D.item(), loss_G.item())
             )
-            writer.add_scalar("gen_loss", loss_G, i)
+
         batches_done += 1
 print("[INFO] Finished training the WGAN")
 print("[INFO] Generating images from Generator network")
 generate_images(f"data/Generator.pth",
-                imgs.shape[0], opt.latent_dim,
+                (imgs.shape[0], opt.latent_dim),
                 opt.output_folder)
 print("[INFO] Finished generating images")
-
-# Call flush() method to make sure that all pending events have been written to disk.
-writer.flush()
-
-# Closes data streams
-writer.close()

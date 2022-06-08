@@ -68,12 +68,11 @@ def timer(func):
 
 
 transform = A.Compose([
-    A.HorizontalFlip(p=0.5),
-    A.VerticalFlip(p=0.6),
-    A.RandomRotate90(p=0.3),
-    A.GaussianBlur(p=0.6),
-    A.ShiftScaleRotate(p=0.5),
-    A.GaussNoise(p=0.5),
+    A.HorizontalFlip(p=0.4),
+    A.VerticalFlip(p=0.5),
+    A.GaussianBlur(blur_limit=(3,7), always_apply=True),
+    A.ShiftScaleRotate(p=0.6),
+    A.GaussNoise(p=0.4),
     A.Cutout(num_holes=10, max_h_size=32, max_w_size=32),
     A.Compose([
         A.OpticalDistortion(0.1, 0.1),
@@ -105,7 +104,7 @@ class DatasetAugmenter:
                 image = cv2.imread(f"{self.images_dir}/{image_name}", 0)
                 print(f"[INFO] Reading and augmenting image: {image_name}")
                 # Applying augmentation
-                for i in tqdm(range(100)):
+                for i in tqdm(range(3200)):
                     augmented_image = transform(image=image)['image']
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i + 1}.png",
                                 augmented_image)

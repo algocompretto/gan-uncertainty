@@ -15,7 +15,6 @@ parser.add_argument("--generative_model", type=str, default="wgan", help="number
 parser.add_argument("--output_folder", type=str, default=f"data/temp/simulated",
                     help="output folder for all of the simulated images")
 opt = parser.parse_args()
-print(opt)
 
 os.makedirs(f"{opt.output_folder}/{opt.generative_model}", exist_ok=True)
 
@@ -59,7 +58,7 @@ def simulate(img: object, cond: object):
 @timer
 def snesim_simulation():
     ti_selection_p = gs.Program("bin/snesim.exe", parfile='param.par')
-
+    # TODO: adaptar para linux
     parstr = """
                     Parameters for SNESIM
                   ********************

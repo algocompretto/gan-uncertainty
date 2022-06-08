@@ -3,7 +3,6 @@ python3 src/create_dataset.py
 
 echo "Removing some temporary files"
 rm -rf data/temp/np
-# rm -rf data/temp/augmented
 rm -rf data/temp/generated_binary
 
 echo "Training WGAN algorithm"
