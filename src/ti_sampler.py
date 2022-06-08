@@ -1,7 +1,9 @@
+import functools
 import os
 import operator
 import numpy as np
 import pygeostat as gs
+import matplotlib.pyplot as plt
 
 os.makedirs("data/temp/selected/", exist_ok=True)
 
@@ -27,12 +29,12 @@ parstr = """                                    Parameters
  START OF PARAMETERS:
  {conditional_samples}                                       - samples datafile name
  50                                              - sample number
- 250 0.5 1                                         - nx, xmn, xsiz; in sample migration grid
- 250 0.5 1                                         - ny, ymn, ysiz; in sample migration grid
+ 150 0.5 1                                         - nx, xmn, xsiz; in sample migration grid
+ 150 0.5 1                                         - ny, ymn, ysiz; in sample migration grid
  1   0.5 1                                         - nz, zmn, zsiz; in sample migration grid
  {generated_images}                                        - training images datafile name
- 250 0.5 1                                         - nx, xmn, xsiz; in training images
- 250 0.5 1                                         - ny, ymn, ysiz; in training images
+ 150 0.5 1                                         - nx, xmn, xsiz; in training images
+ 150 0.5 1                                         - ny, ymn, ysiz; in training images
  1   0.5 1                                         - nz, zmn, zsiz; in training images
  25 25 0                                           - search radii in x,y and z directions
  1                                                - minimum event order to analyze
@@ -52,18 +54,25 @@ pars = dict(conditional_samples=conditional_samples,
 
 ti_selection_p.run(parstr=parstr.format(**pars))
 
+# Get similarities values
 with open("bin/result.out", 'r') as file:
     # Convert to list of string
-    array_of_similarity = ''.join(file.readlines()).split('\n')[11].split()
+    lines = file.readlines()
+    lines = [l.replace('\n', '').strip() for l in lines]
+    idx_before: int = lines.index("Relative compatibility with training images (direct sampling):") + 1
+    idx_after: int = lines.index("Occurrences of conditioning events in each training image:")
+    sim = lines[idx_before:idx_after]
 
-similarity = [[idx, float(x)] for idx, x in enumerate(array_of_similarity)]
-try: sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:100]
-except IndexError as ie:
-    sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:50]
+    sim_array = functools.reduce(operator.iconcat,
+                                 [x.split() for x in sim], [])
+
+    sim_array = list(
+        map(float, sim_array))
+
+similarity = [[idx, float(x)] for idx, x in enumerate(sim_array)]
+sorted_similarity = sorted(similarity, key=operator.itemgetter(1), reverse=True)[:10]
 
 print("Sorted similarity:", sorted_similarity)
-
-import matplotlib.pyplot as plt
 
 for idx, similarity in sorted_similarity:
     nome = "data/temp/selected/teste_" + str(idx) + "_sim" + str(round(similarity, 4)) + ".png"
