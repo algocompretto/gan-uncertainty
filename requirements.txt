@@ -1,12 +1,18 @@
 albumentations==1.1.0
 g2s==0.98.0
 matplotlib==3.5.1
-opencv-python==4.5.5.62
+opencv-python~=4.5.5.64
 pip-chill==1.0.1
 torchvision==0.11.3
 tqdm==4.63.0
 
 pygeostat~=1.1.1
 torch~=1.10.2
-numpy~=1.22.4
+numpy~=1.22.3
 scikit-image~=0.19.2
+imageio~=2.16.1
+scipy~=1.8.0
+setuptools~=58.1.0
+tifffile~=2022.3.25
+Pillow~=9.0.1
+pyvista

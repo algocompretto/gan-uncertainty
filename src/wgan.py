@@ -1,5 +1,6 @@
 import argparse
 import os
+import csv
 from cmath import inf
 
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ from torchvision.datasets import ImageFolder
 from helpers.funcs import generate_images
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=2, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=10_000, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--n_cpu", type=int, default=-1, help="number of cpu threads to use during batch generation")
@@ -22,7 +23,7 @@ parser.add_argument("--img_size", type=int, default=150, help="size of each imag
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--n_critic", type=int, default=5, help="number of training steps for discriminator per iter")
 parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
-parser.add_argument("--sample_interval", type=int, default=500, help="interval betwen image samples")
+parser.add_argument("--sample_interval", type=int, default=100, help="interval between image samples")
 parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the "
                                                                                 "generated images")
 parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the "
@@ -34,6 +35,7 @@ os.makedirs(opt.output_folder, exist_ok=True)
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 cuda = True if torch.cuda.is_available() else False
+
 
 def matplotlib_imshow(img, one_channel=False):
     if one_channel:
@@ -49,7 +51,7 @@ def matplotlib_imshow(img, one_channel=False):
 # helper function
 def select_n_random(data, labels, n=100):
     '''
-    Selects n random datapoints and their corresponding labels from a dataset
+    Selects n random data-points and their corresponding labels from a dataset
     '''
     assert len(data) == len(labels)
 
@@ -64,11 +66,13 @@ class Generator(nn.Module):
     Args:
         nn (nn.Module): The neural network module from PyTorch.
     """
+
     def __init__(self):
         super(Generator, self).__init__()
 
         def block(in_feat, out_feat, normalize=True):
-            """The building blocks for the Generator neural network.
+            """
+            The building blocks for the Generator neural network.
 
             Args:
                 in_feat (`int`): The input features
@@ -83,7 +87,7 @@ class Generator(nn.Module):
             if normalize:
                 layers.append(nn.BatchNorm1d(out_feat, momentum=0.8, eps=1e-05))
             layers.append(nn.LeakyReLU(0.2, inplace=True))
-            return layers            
+            return layers
 
         self.model = nn.Sequential(
             *block(opt.latent_dim, 128, normalize=False),
@@ -115,6 +119,7 @@ class Discriminator(nn.Module):
     Args:
         nn (nn.Module): The neural network module from PyTorch.
     """
+
     def __init__(self):
         super(Discriminator, self).__init__()
 
@@ -164,12 +169,13 @@ optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=opt.lr)
 optimizer_D = torch.optim.RMSprop(discriminator.parameters(), lr=opt.lr)
 
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
+params_dict = {"critic_loss": [],
+               "gen_loss": []
+               }
 
 # --------------
 #  Training step
 # --------------
-running_loss=[]
-running_epoch_loss=[]
 batches_done = 0
 best_loss = inf
 
@@ -187,6 +193,7 @@ for epoch in range(opt.n_epochs):
 
         # Generate a batch of images
         fake_imgs = generator(z).detach()
+
         # Adversarial loss
         loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
         loss_D.backward()
@@ -205,7 +212,7 @@ for epoch in range(opt.n_epochs):
 
             # Generate a batch of images
             gen_imgs = generator(z)
-            
+
             # Adversarial loss
             loss_G = -torch.mean(discriminator(gen_imgs))
             if abs(loss_G) < best_loss:
@@ -214,11 +221,19 @@ for epoch in range(opt.n_epochs):
             loss_G.backward()
             optimizer_G.step()
 
+            # Log to dictionary
+            params_dict["critic_loss"].append(loss_D.item())
+            params_dict["gen_loss"].append(loss_G.item())
             print(
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
                 % (epoch, opt.n_epochs, batches_done % len(dataloader), len(dataloader), loss_D.item(), loss_G.item())
             )
         batches_done += 1
+
+        # Log to .csv file
+        w = csv.writer(open("training_params.csv", "a"))
+        for key, val in params_dict.items():
+            w.writerow([key, val])
 
 
 print("[INFO] Finished training the WGAN")

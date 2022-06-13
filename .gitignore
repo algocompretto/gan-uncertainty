@@ -154,3 +154,4 @@ cython_debug/
 /.vs/VSWorkspaceState.json
 /.vs
 data/temp
+scikit-mps/
