@@ -1,16 +1,7 @@
-echo "Augmenting data"
-python3 src/create_dataset.py
+echo "Changing to SNESIM directory"
+cd bin/
 
-echo "Removing some temporary files"
-rm -rf data/temp/np
-rm -rf data/temp/generated_binary
+echo "Executing SNESIM with default parameter file"
+snesim.exe
 
-echo "Training WGAN algorithm"
-python3 src/wgan.py
-rm -rf data/temp/augmented
-
-echo "Sampling TI images generated"
-python3 src/ti_sampler.py
-
-echo "Simulating with TI selected"
-python3 src/mps.py
+echo "snesim_par.par"
