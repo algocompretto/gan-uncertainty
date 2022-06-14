@@ -14,7 +14,7 @@ vertprop.dat                  - file with target vertical proportions
 3                             - debugging level: 0,1,2,3
 snesim.dbg                    - debugging file
 snesim.out                    - file for simulation output
-2                             - number of realizations to generate
+100                             - number of realizations to generate
 250    0.5    1.0              - nx,xmn,xsiz
 250    0.5    1.0              - ny,ymn,ysiz
 1     0      0.0              - nz,zmn,zsiz
