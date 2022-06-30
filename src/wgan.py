@@ -1,244 +1,277 @@
-import argparse
+"""
+WGAN with Gradient Penalty training module.
+
+This module trains the WGAN model according to user-specified parameters. If
+wanted, you can specify each parameter accordingly.
+
+Example
+-------
+Usage example::
+
+    $ python3 wgan.py --n_epochs 10_000 --cuda True --batch_size 64
+
+Notes
+-----
+    Make sure you have CUDA device before setting ``CUDA`` flag as True.
+"""
+
 import os
-import csv
-from cmath import inf
-
-import matplotlib.pyplot as plt
-import numpy as np
+import time
 import torch
-import torch.nn as nn
+import argparse
+import torchvision
+import tensorboardX
 import torchvision.transforms as transforms
+
+from torchsummary import summary
 from torch.autograd import Variable
-from torchvision.datasets import ImageFolder
-
-from helpers.funcs import generate_images
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=10_000, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--n_cpu", type=int, default=-1, help="number of cpu threads to use during batch generation")
-parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=150, help="size of each image dimension")
-parser.add_argument("--channels", type=int, default=1, help="number of image channels")
-parser.add_argument("--n_critic", type=int, default=5, help="number of training steps for discriminator per iter")
-parser.add_argument("--clip_value", type=float, default=0.01, help="lower and upper clip value for disc. weights")
-parser.add_argument("--sample_interval", type=int, default=100, help="interval between image samples")
-parser.add_argument("--output_folder", type=str, default="data/temp/wgan", help="output folder for all of the "
-                                                                                "generated images")
-parser.add_argument("--input_folder", type=str, default="data/temp/augmented", help="input folder for all of the "
-                                                                                    "augmented images")
-opt = parser.parse_args()
-
-# Create directories
-os.makedirs(opt.output_folder, exist_ok=True)
-
-img_shape = (opt.channels, opt.img_size, opt.img_size)
-cuda = True if torch.cuda.is_available() else False
+from models.wgan_gp import GeneratorModel, CriticModel
+from helpers.train_utils import (load_checkpoint, gradient_penalty,
+                                 save_checkpoint)
 
 
-def matplotlib_imshow(img, one_channel=False):
-    if one_channel:
-        img = img.mean(dim=0)
-    img = img / 2 + 0.5
-    npimg = img.numpy()
-    if one_channel:
-        plt.imshow(npimg, cmap="Greys")
-    else:
-        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+def config():
+    """Parameter configuration function.
 
-
-# helper function
-def select_n_random(data, labels, n=100):
-    '''
-    Selects n random data-points and their corresponding labels from a dataset
-    '''
-    assert len(data) == len(labels)
-
-    perm = torch.randperm(len(data))
-    return data[perm][:n], labels[perm][:n]
-
-
-class Generator(nn.Module):
+    Returns
+    -------
+    argparse.args
+        Arguments to be used.
     """
-    `Generator` extending `nn.Module` from PyTorch. \n
-    This class generates a random signal and enhances as both networks evolve.\n
-    Args:
-        nn (nn.Module): The neural network module from PyTorch.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--n_epochs", type=int, default=2,
+                        help="Number of epochs to train")
+    parser.add_argument("--cuda", type=bool, default=False,
+                        help="Boolean for training with/without NVIDIA driver")
+    parser.add_argument("--batch_size", default=128,
+                        type=int, help="Batch size")
+    parser.add_argument("--num_workers", default=4,
+                        type=int, help="Number of workers for dataset loading")
+    parser.add_argument("--n_critic", type=int, default=5,
+                        help="Number of epochs to train the Critic module")
+    parser.add_argument("--learning_rate", type=float,
+                        default=0.0002, help="Learning rate for optimizers")
+    parser.add_argument("--latent_dim", type=int,
+                        default=100,
+                        help="Latent dimension of features to generate")
+    parser.add_argument("--images_path", type=str,
+                        default="data/temp/windowed_ti/",
+                        help="Path to folder with training images")
+    parser.add_argument("--num_channels", type=int, default=1,
+                        help="Channels in tensor image")
+    parser.add_argument("--checkpoint", type=str,
+                        default=".checkpoints/wgan_gp",
+                        help="Checkpoints directory to save PyTorch models")
+    parser.add_argument("--sample_images", type=str,
+                        default="sample_images/wgan_gp",
+                        help="Output for sampled images")
+    return parser.parse_args()
+
+
+def watch_for_checkpoints(args, Critic, Generator, critic_opt, gen_opt):
     """
+    Scan directories to see if there are checkpoints saved.
 
-    def __init__(self):
-        super(Generator, self).__init__()
+    Parameters
+    ----------
+    args : argparse.args
+        Parameters defined for model training.
+    Critic : nn.Module
+        The Critic model to be loaded if any checkpoint is found.
+    Generator : nn.Module
+        The Critic model to be loaded if any checkpoint is found
+    critic_opt : torch.optim.Optimizer
+        PyTorch optimizer for the Critic model.
+    gen_opt : torch.optim.Optimizer
+        PyTorch optimizer for the Generator model.
 
-        def block(in_feat, out_feat, normalize=True):
-            """
-            The building blocks for the Generator neural network.
-
-            Args:
-                in_feat (`int`): The input features
-                out_feat (`int`): Output features, the classes for shale and mud.
-                normalize (`bool`, optional): If `True` appends a `BatchNormalization1d` layer
-                    to the `Generator` instance. Defaults to True.
-
-            Returns:
-                `list`: Returns layers of accordingly.
-            """
-            layers = [nn.Linear(in_feat, out_feat)]
-            if normalize:
-                layers.append(nn.BatchNorm1d(out_feat, momentum=0.8, eps=1e-05))
-            layers.append(nn.LeakyReLU(0.2, inplace=True))
-            return layers
-
-        self.model = nn.Sequential(
-            *block(opt.latent_dim, 128, normalize=False),
-            *block(128, 256),
-            *block(256, 512),
-            *block(512, 1024),
-            nn.Linear(1024, int(np.prod(img_shape))),
-            nn.Tanh()
-        )
-
-    def forward(self, z):
-        """The forward pass function to the neural network
-
-        Args:
-            z (`Tensor[]`): The tensor containing the latent space signal.
-
-        Returns:
-            `Tensor[]` : Returns the image in Tensor format.
-        """
-        img = self.model(z)
-        img = img.view(img.shape[0], *img_shape)
-        return img
-
-
-class Discriminator(nn.Module):
+    Returns
+    -------
+    start_epoch : int
+        The epoch to resume the training, if no checkpoint is found, then
+        starts at epoch zero.
     """
-    `Discriminator` extending `nn.Module` from PyTorch. \n
-    This class discriminates a random signal and enhances as both networks evolve.\n
-    Args:
-        nn (nn.Module): The neural network module from PyTorch.
+    checkpoint = args["checkpoint"]
+    save_dir = args["sample_images"]
+
+    # Check if path exists
+    if not isinstance(checkpoint, (list, tuple)):
+        paths = [checkpoint]
+        for path in paths:
+            if not os.path.isdir(path):
+                os.makedirs(path)
+    if not isinstance(save_dir, (list, tuple)):
+        paths = [save_dir]
+        for path in paths:
+            if not os.path.isdir(path):
+                os.makedirs(path)
+    try:
+        # Loads checkpoint and changes state dictionary
+        ckpt = load_checkpoint(checkpoint)
+        start_epoch = ckpt['epoch']
+        Critic.load_state_dict(ckpt['D'])
+        Generator.load_state_dict(ckpt['Generator'])
+        critic_opt.load_state_dict(ckpt['d_optimizer'])
+        gen_opt.load_state_dict(ckpt['g_optimizer'])
+    except FileNotFoundError:
+        print('[*] No checkpoint!')
+        start_epoch = 0
+
+    return start_epoch
+
+
+def train(args) -> None:
     """
+    Train both Generative and Critic model.
 
-    def __init__(self):
-        super(Discriminator, self).__init__()
+    Parameters
+    ----------
+    args : argparse.args
+        Parameters defined for model training.
+    """
+    Critic = CriticModel(args["num_channels"])
+    Generator = GeneratorModel(args["latent_dim"])
+    print("Critic detailed description:")
+    summary(Critic, (1, args["latent_dim"], args["batch_size"]))
+    print("Generator detailed description")
+    print(Generator)
 
-        self.model = nn.Sequential(
-            nn.Linear(int(np.prod(img_shape)), 512),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 1),
-        )
+    # Instantiates optimizers
+    G_opt = torch.optim.Adam(
+        Generator.parameters(), lr=args["learning_rate"], betas=(0.5, 0.999))
+    C_opt = torch.optim.Adam(
+        Critic.parameters(), lr=args["learning_rate"], betas=(0.5, 0.999))
 
-    def forward(self, img):
-        """The forward pass function to the neural network
+    start_epoch = watch_for_checkpoints(args, Critic, Generator, C_opt, G_opt)
 
-        Args:
-            img (`Tensor[]`): The image tensor containing the latent space signal.
+    # Loading Dataset
+    transf = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        transforms.Grayscale(num_output_channels=1),
+    ])
 
-        Returns:
-            `Tensor[]` : Returns the score of its originality.
-        """
-        img_flat = img.view(img.shape[0], -1)
-        validity = self.model(img_flat)
-        return validity
+    writer = tensorboardX.SummaryWriter(".logs/wgan-gp")
+
+    data = torchvision.datasets.ImageFolder(
+        args["images_path"], transform=transf)
+    dataloader = torch.utils.data.DataLoader(data,
+                                             batch_size=args["batch_size"],
+                                             shuffle=True,
+                                             num_workers=args["num_workers"])
+
+    # Starting training loop
+    for epoch in range(start_epoch, args["n_epochs"]):
+        start_time = time.time()
+        critic_loss = []
+        gen_loss = []
+        Generator.train()
+
+        # Sampling from dataloader
+        for i, (images, _) in enumerate(dataloader):
+            step = epoch * len(dataloader) + i + 1
+            images = Variable(images)
+            batch = images.size(0)
+
+            if args["cuda"]:
+                images = images.cuda()
+
+            # Creates random noise
+            z = Variable(torch.randn(batch, args["latent_dim"]))
+
+            if args["cuda"]:
+                z = z.cuda()
+
+            # Sends random noise to Generator and gets Critic output
+            generated = Generator(z)
+            real_criticized = Critic(images)
+            fake_criticized = Critic(generated)
+
+            # Compare distance between critic output
+            em_distance = real_criticized.mean() - fake_criticized.mean()
+            grad_penalty = gradient_penalty(images.data, generated.data,
+                                            Critic)
+
+            # Calculates critic loss
+            CriticLoss = -em_distance + grad_penalty * 10
+
+            # Append to list for logging purpose
+            critic_loss.append(CriticLoss.item())
+            Critic.zero_grad()
+            CriticLoss.backward()
+            C_opt.step()
+
+            # Logs to tensorboard
+            writer.add_scalar('Critic/em_dist', em_distance.data.cpu().numpy(),
+                              global_step=step)
+            writer.add_scalar('Critic/gradient_penalty', grad_penalty.data
+                              .cpu().numpy(),
+                              global_step=step)
+            writer.add_scalar('Critic/critic_loss', CriticLoss.data
+                              .cpu().numpy(),
+                              global_step=step)
+
+            if step % args["n_critic"] == 0:
+                # Random latent noise
+                z = Variable(torch.randn(batch, args["latent_dim"]))
+
+                if args["cuda"]:
+                    z = z.cuda()
+
+                # Generate new images from this latent vector
+                generated = Generator(z)
+
+                fake_criticized = Critic(generated)
+                GeneratorLoss = -fake_criticized.mean()
+
+                # Append to list for logging purpose
+                gen_loss.append(GeneratorLoss.item())
+
+                # Backward pass
+                Critic.zero_grad()
+                Generator.zero_grad()
+                GeneratorLoss.backward()
+                G_opt.step()
+
+                # Logs loss scalar to tensorboard
+                writer.add_scalars('Generator',
+                                   {"g_loss": GeneratorLoss.data.cpu()
+                                    .numpy()}, global_step=step)
+
+                print(
+                    f"Epoch {epoch+1} : {i+1}/{len(dataloader)}:" +
+                    f"{round((time.time()-start_time)/60, 2)} mins", end='\r')
+
+    print(f"Epoch {epoch+1} completed")
+
+    # Switch to evaluation mode and sample new images
+    Generator.eval()
+
+    # Generate new samples to save
+    z_sample = Variable(torch.randn(100, args["latent_dim"]))
+    if args["cuda"]:
+        z_sample = z_sample.cuda()
+
+    fake_gen_images = (Generator(z_sample).data + 1)/2.0
+
+    torchvision.utils.save_image(
+        fake_gen_images,
+        args["sample_images"]+'/Epoch '+str(epoch+1)+".jpg", nrow=10)
+
+    x = torchvision.utils.make_grid(fake_gen_images, nrow=5)
+    writer.add_image("Generated", x, step)
+
+    # Save checkpoints
+    save_checkpoint({'epoch': epoch + 1,
+                     'D': Critic.state_dict(),
+                     'Generator': Generator.state_dict(),
+                     'd_optimizer': C_opt.state_dict(),
+                     'g_optimizer': G_opt.state_dict()},
+                    '%s/Epoch_(%d).ckpt' % (args["checkpoint"], epoch + 1),
+                    max_keep=2)
 
 
-# Initialize generator and discriminator
-generator = Generator()
-discriminator = Discriminator()
+if __name__ == "__main__":
+    args = config().__dict__
 
-if cuda:
-    generator.cuda()
-    discriminator.cuda()
-
-# Configure data loader
-transform = transforms.Compose([
-    transforms.GaussianBlur(kernel_size=(3, 3)),
-    transforms.Grayscale(num_output_channels=1),
-    transforms.Resize((opt.img_size, opt.img_size)), transforms.ToTensor(),
-    transforms.RandomErasing(p=0.3),
-    transforms.Normalize([0.5], [0.5])])
-
-dataset_loaded = ImageFolder(f"{opt.input_folder}", transform=transform)
-dataloader = torch.utils.data.DataLoader(dataset_loaded, batch_size=opt.batch_size, shuffle=True)
-
-# Optimizers
-optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=opt.lr)
-optimizer_D = torch.optim.RMSprop(discriminator.parameters(), lr=opt.lr)
-
-Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
-params_dict = {"critic_loss": [],
-               "gen_loss": []
-               }
-
-# --------------
-#  Training step
-# --------------
-batches_done = 0
-best_loss = inf
-
-for epoch in range(opt.n_epochs):
-    for i, (imgs, _) in enumerate(dataloader):
-        # Configure input
-        real_imgs = Variable(imgs.type(Tensor))
-
-        # ---------------------
-        #  Train Discriminator
-        # ---------------------
-        optimizer_D.zero_grad()
-        # Sample noise as generator input
-        z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
-
-        # Generate a batch of images
-        fake_imgs = generator(z).detach()
-
-        # Adversarial loss
-        loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
-        loss_D.backward()
-        optimizer_D.step()
-
-        # Clip weights of discriminator
-        for p in discriminator.parameters():
-            p.data.clamp_(-opt.clip_value, opt.clip_value)
-
-        # Train the generator every n_critic iterations
-        if i % opt.n_critic == 0:
-            # -----------------
-            #  Train Generator
-            # -----------------
-            optimizer_G.zero_grad()
-
-            # Generate a batch of images
-            gen_imgs = generator(z)
-
-            # Adversarial loss
-            loss_G = -torch.mean(discriminator(gen_imgs))
-            if abs(loss_G) < best_loss:
-                # Saves the generator network
-                torch.save(generator, f"data/Generator.pth")
-            loss_G.backward()
-            optimizer_G.step()
-
-            # Log to dictionary
-            params_dict["critic_loss"].append(loss_D.item())
-            params_dict["gen_loss"].append(loss_G.item())
-            print(
-                "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
-                % (epoch, opt.n_epochs, batches_done % len(dataloader), len(dataloader), loss_D.item(), loss_G.item())
-            )
-        batches_done += 1
-
-        # Log to .csv file
-        w = csv.writer(open("training_params.csv", "a"))
-        for key, val in params_dict.items():
-            w.writerow([key, val])
-
-
-print("[INFO] Finished training the WGAN")
-print("[INFO] Generating images from Generator network")
-generate_images(generator_path=f"data/Generator.pth",
-                shape=(imgs.shape[0], opt.latent_dim),
-                output_folder=opt.output_folder)
-print("[INFO] Finished generating images")
+    train(args)

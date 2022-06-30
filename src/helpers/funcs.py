@@ -83,7 +83,7 @@ def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997
 
 def convert_to_grid(array: np.array) -> np.array:
     # Initializing variables
-    map_dict: Dict[int, int] = {0: 1, 1: 2}
+    map_dict: Dict[int, int] = {0: 0, 1: 1}
     dataX: object = array[:, 0]
     dataY: object = array[:, 1]
 
@@ -93,7 +93,7 @@ def convert_to_grid(array: np.array) -> np.array:
     # Creating the simulation grid
     x_, x_idx = np.unique(np.ravel(dataX), return_inverse=True)
     y_, y_idx = np.unique(np.ravel(dataY), return_inverse=True)
-    newArray = np.zeros((len(x_), len(y_)), dtype=dataClass.dtype) * np.nan
+    newArray = np.zeros((len(x_), len(y_)), dtype=dataClass.dtype)
     newArray[x_idx, y_idx] = np.ravel(dataClass)
     return newArray
 
