@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import cv2
-from helpers.funcs import to_binary
+from src.helpers.funcs import to_binary
 from tqdm import tqdm
 import albumentations as A
 import time
@@ -36,7 +36,7 @@ transform = A.Compose([
     A.Compose([
     A.OpticalDistortion(0.1, 0.1),
     A.GridDistortion(5, 0.3, 1)
-    ]),
+    ])
 ])
 
 
@@ -62,7 +62,7 @@ class DatasetAugmenter:
                 image = cv2.imread(f"{self.images_dir}/{image_name}", 0)
                 print(f"[INFO] Reading and augmenting image: {image_name}")
                 # Applying augmentation
-                for i in tqdm(range(500)):
+                for i in tqdm(range(10000)):
                     augmented_image = transform(image=image)['image']
                     cv2.imwrite(f"{self.output_dir}/augmented_{image_name.replace('.png', '')}_{i+1}.png",
                                 augmented_image)
@@ -70,16 +70,3 @@ class DatasetAugmenter:
             except AttributeError as e:
                 print(f"Image {image_name} error: {e.args}.")
                 pass
-
-    def get_binary(self):
-        # count columns and images added to file
-        all_images = []
-        list_of_names = [f'ti_{idx}' for idx in range(len(os.listdir(self.output_dir)))]
-        kwargs = {key:None for key in list_of_names}
-
-        for im in tqdm(os.listdir(self.output_dir)):
-            binary_image = to_binary(self.output_dir+'/'+im)
-            binary_image = binary_image.squeeze().ravel() / 255
-            all_images.append(binary_image)
-
-        np.savez(f'data/temp/np/ti_binary', all_images, **kwargs)
