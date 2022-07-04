@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
 import time
 
 import cv2
+import numpy as np
+import tensorboardX
 import torch
 import torch.nn as nn
 import torchvision
-import tensorboardX
-from PIL import Image
-import numpy as np
 import torchvision.transforms as transforms
 import yaml
+from PIL import Image
 from imageio import imsave
 from skimage.util import view_as_windows
-from torch.autograd import Variable
-from torch.autograd import grad
+from torch.autograd import Variable, grad
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from generative_mps.gan.core.wgan_gp import CriticModel, GeneratorModel
@@ -31,8 +30,10 @@ def gradient_penalty(x, y, f):
     z = Variable(z, requires_grad=True)
     z = z.cuda()
     o = f(z)
-    g = grad(o, z, grad_outputs=torch.ones(o.size()).cuda(), create_graph=True)[0].view(z.size(0), -1)
-    # g = grad(o,z, grad_outputs=torch.ones(o.size()), create_graph=True)[0].view(z.size(0), -1)
+    g = grad(o, z, grad_outputs=torch.ones(o.size()).cuda(),
+             create_graph=True)[0].view(z.size(0), -1)
+    # g = grad(o,z, grad_outputs=torch.ones(o.size()), create_graph=True)[
+    # 0].view(z.size(0), -1)
     gp = ((g.norm(p=2, dim=1)) ** 2).mean()
     return gp
 
@@ -87,7 +88,8 @@ def config():
         try:
             parsed_yaml = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
-            print(f"Exception occurred when opening .yaml config file! Exception: {exc}")
+            print(f"Exception occurred when opening .yaml config file! "
+                  f"Exception: {exc}")
     return parsed_yaml
 
 
@@ -134,7 +136,8 @@ def save_generated_images(windowed_images, args_dict: dict) -> None:
                             ncols=100):
         for j, t in enumerate(batch_ti):
             ti_resized = cv2.resize(t, (128, 128))
-            imsave(f"{args_dict['output_dir']}/strebelle_{i}_{j}.png", ti_resized)
+            imsave(f"{args_dict['output_dir']}/strebelle_{i}_{j}.png",
+                   ti_resized)
 
 
 def generate_trivial_augment(args_dict: dict) -> None:
@@ -251,11 +254,14 @@ def train(args_dict) -> None:
 
     # Instantiates optimizers
     G_opt = torch.optim.Adam(
-        generator.parameters(), lr=args_dict["learning_rate"], betas=(0.5, 0.999))
+        generator.parameters(), lr=args_dict["learning_rate"],
+        betas=(0.5, 0.999))
+
     C_opt = torch.optim.Adam(
         critic.parameters(), lr=args_dict["learning_rate"], betas=(0.5, 0.999))
 
-    start_epoch = watch_for_checkpoints(args_dict, critic, generator, C_opt, G_opt)
+    start_epoch = watch_for_checkpoints(args_dict, critic,
+                                        generator, C_opt, G_opt)
 
     # Loading Dataset
     transformation_funcs = transforms.Compose([
@@ -268,10 +274,8 @@ def train(args_dict) -> None:
 
     data = torchvision.datasets.ImageFolder(
         args_dict["images_path"], transform=transformation_funcs)
-    dataloader = torch.utils.data.DataLoader(data,
-                                             batch_size=args_dict["batch_size"],
-                                             shuffle=True,
-                                             num_workers=args_dict["num_workers"])
+    dataloader = DataLoader(data, batch_size=args_dict["batch_size"],
+                            shuffle=True, num_workers=args_dict["num_workers"])
 
     # Starting training loop
     for epoch in tqdm(range(start_epoch, args_dict["n_epochs"]),
@@ -350,11 +354,13 @@ def train(args_dict) -> None:
 
                 # Logs loss scalar to tensorboard
                 writer.add_scalars('Generator',
-                                   {"g_loss": GeneratorLoss.data.cpu().numpy()}, global_step=step)
+                                   {"g_loss": GeneratorLoss.data.cpu().numpy()},
+                                   global_step=step)
 
                 print(
                     f"Epoch {epoch + 1} : {i + 1}/{len(dataloader)}:" +
-                    f"{round((time.time() - start_time) / 60, 2)} minutes", end='\r')
+                    f"{round((time.time() - start_time) / 60, 2)} minutes",
+                    end='\r')
 
         # Switch to evaluation mode and sample new images
         generator.eval()
@@ -368,7 +374,8 @@ def train(args_dict) -> None:
 
         torchvision.utils.save_image(
             fake_gen_images,
-            args_dict["sample_images"] + '/Epoch ' + str(epoch + 1) + ".jpg", nrow=10)
+            args_dict["sample_images"] + '/Epoch ' + str(epoch + 1) + ".jpg",
+            nrow=10)
 
         x = torchvision.utils.make_grid(fake_gen_images, nrow=5)
         writer.add_image("Generated", x, step)
@@ -378,7 +385,8 @@ def train(args_dict) -> None:
                          'D': critic.state_dict(),
                          'Generator': generator.state_dict(),
                          'd_optimizer': C_opt.state_dict(),
-                         'g_optimizer': G_opt.state_dict()}, f'wgan/epoch_({epoch + 1}).ckpt',
+                         'g_optimizer': G_opt.state_dict()},
+                        f'wgan/epoch_({epoch + 1}).ckpt',
                         max_keep=5)
 
 
