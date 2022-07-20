@@ -155,3 +155,5 @@ cython_debug/
 /.vs
 data/temp
 scikit-mps/
+ti_*.out
+snesim_*.out
