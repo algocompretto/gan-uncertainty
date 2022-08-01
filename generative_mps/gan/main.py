@@ -1,4 +1,5 @@
 import os
+from random import random
 import shutil
 import time
 
@@ -115,7 +116,7 @@ def generate_windows(args_dict: dict):
 
     _, ti = cv2.threshold(ti32, 127, 255, cv2.THRESH_BINARY)
 
-    patch_array = view_as_windows(ti, (128, 128))
+    patch_array = view_as_windows(ti, (150, 150))
     return patch_array
 
 
@@ -136,19 +137,11 @@ def save_generated_images(windowed_images, args_dict: dict) -> None:
                             ncols=100):
         for j, t in enumerate(batch_ti):
             ti_resized = cv2.resize(t, (128, 128))
-            imsave(f"{args_dict['output_dir']}/strebelle_{i}_{j}.png",
-                   ti_resized)
-
-
-def generate_trivial_augment(args_dict: dict) -> None:
-    ti32 = cv2.imread(args_dict["training_image"])
-    _, ti = cv2.threshold(ti32, 127, 255, cv2.THRESH_BINARY)
-
-    augmenter = transforms.TrivialAugmentWide()
-    images = [augmenter(Image.fromarray(np.uint8(ti))) for _ in range(3_000)]
-
-    for idx, ti in tqdm(enumerate(images)):
-        imsave(f"{args_dict['output_dir']}/strebelle_{idx}.png", np.array(ti))
+            list_of_transf = [transforms.RandomVerticalFlip(),
+                            transforms.RandomHorizontalFlip()]
+            for flip in list_of_transf:
+                im = flip(ti_resized)
+                imsave(f"{args_dict['output_dir']}/strebelle_{i}_{j}_{time.time()}.png", im)
 
 
 if __name__ == "__main__":
@@ -254,8 +247,7 @@ def train(args_dict) -> None:
 
     # Instantiates optimizers
     G_opt = torch.optim.Adam(
-        generator.parameters(), lr=args_dict["learning_rate"],
-        betas=(0.5, 0.999))
+        generator.parameters(), lr=args_dict["learning_rate"], betas=(0.5, 0.999))
 
     C_opt = torch.optim.Adam(
         critic.parameters(), lr=args_dict["learning_rate"], betas=(0.5, 0.999))
