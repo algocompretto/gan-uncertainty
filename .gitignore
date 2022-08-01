@@ -153,7 +153,13 @@ cython_debug/
 
 /.vs/VSWorkspaceState.json
 /.vs
+/.vscode
+
 data/temp
 scikit-mps/
 ti_*.out
 snesim_*.out
+gan_results.out
+results/*
+*.png
+*.pdf
