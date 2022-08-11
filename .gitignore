@@ -157,8 +157,4 @@ cython_debug/
 
 data/temp
 scikit-mps/
-results/*
-*.png
-*.pdf
-*.out
 *.ckpt

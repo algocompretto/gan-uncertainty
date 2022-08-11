@@ -8,7 +8,7 @@ ssim = Snesim(ti_path="bin/ti_strebelle.out",
               par_file_path="bin/parameter.par",
               snesim_path="bin/snesim.exe")
 
-ssim.sim_parameters("bin/samples50.out", "results_pg.out", 1)
+ssim.sim_parameters("bin/samples50", "results_pg.out", 1)
 ssim.create_parameter_file()
 
 ssim.run()

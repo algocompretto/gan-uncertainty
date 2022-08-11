@@ -2,7 +2,7 @@
 	     ***********************
 
 START OF PARAMETERS:
-samples50.out                 - file with original data
+samples200                 - file with original data
 1  2  3  4                    - columns for x, y, z, variable
 2                             - number of categories
 0   1                         - category codes
@@ -12,7 +12,7 @@ vertprop.dat                  - file with target vertical proportions
 0                             - servosystem parameter (0=no correction)
 -1                            - debugging level: 0,1,2,3
 snesim.dbg                    - debugging file
-snesim.out                    - file for simulation output
+snesim_200samples.out                    - file for simulation output
 100                           - number of realizations to generate
 150    0.5    1.0              - nx,xmn,xsiz
 150    0.5    1.0              - ny,ymn,ysiz
