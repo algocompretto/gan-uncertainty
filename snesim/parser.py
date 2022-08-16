@@ -32,7 +32,7 @@ def get_args():
     parser.add_argument('--output_path', default="data/snesim.out",
                         type=str, help='Training image path')
 
-    parser.add_argument('--realizations', default=1,
+    parser.add_argument('--realizations', default=10,
                         type=int, help='Number of realizations to simulate')
 
     parser.add_argument('--max_cond', default=30,
@@ -269,7 +269,7 @@ def plot_realizations_grid(real):
     sq = round(len(real))
 
     image_grid = ImageGrid(fig, 111,
-                           nrows_ncols=(sq, sq),
+                           nrows_ncols=(3, 3),
                            axes_pad=0.1,
                            cbar_location="left",
                            cbar_pad=0.15)
