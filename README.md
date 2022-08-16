@@ -1,15 +1,6 @@
 <h1 align="center">
-    Simulating reservoir imagery with Deep Generative Networks 
+    Uncertainty modelling with Deep Generative Networks 
 </h1>
-
-
-<a href="video_geradas.mp4" title="Generated GAN images">
-  <p align="center">
-    <img width="25%" src="movie.gif" alt="Generated GAN images"/>
-  </p>
-</a>
-
-
 
   <p align="center"> Project information</p>
 
@@ -29,6 +20,7 @@
 
 - [Python](https://www.python.org/)
 - [PyTorch](https://pytorch.org/)
+- [Pygeostat](http://www.ccgalberta.com/pygeostat/welcome.html)
   
 <h2 id="usage" > 👷 Usage </h2>
 
