@@ -1,4 +1,4 @@
-output_dir: windowed_ti/real
+output_dir: windowed_ti/augmented
 training_image: strebelle.png
 checkpoint: .checkpoints/
 sample_images: output/wgan
@@ -11,5 +11,5 @@ batch_size: 64
 num_workers: 8
 
 n_epochs: 2
-cuda: False
+cuda: True
 n_critic: 5
