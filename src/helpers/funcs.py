@@ -1,13 +1,5 @@
-from typing import Dict
-
-from skimage.transform import resize
-from torchvision.utils import save_image
-from torch.autograd import Variable
-import torch
-import time
-import numpy as np
-import cv2
 import os
+import numpy as np
 
 
 def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997799) -> object:
@@ -80,65 +72,3 @@ def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997
 
     return eas
 
-
-def convert_to_grid(array: np.array) -> np.array:
-    # Initializing variables
-    map_dict: Dict[int, int] = {0: 0, 1: 1}
-    dataX: object = array[:, 0]
-    dataY: object = array[:, 1]
-
-    # Mapping values to categorical variables
-    dataClass: object = np.vectorize(map_dict.get)(array[:, 3])
-
-    # Creating the simulation grid
-    x_, x_idx = np.unique(np.ravel(dataX), return_inverse=True)
-    y_, y_idx = np.unique(np.ravel(dataY), return_inverse=True)
-    newArray = np.zeros((len(x_), len(y_)), dtype=dataClass.dtype)
-    newArray[x_idx, y_idx] = np.ravel(dataClass)
-    return newArray
-
-
-def load_target_ti(fname: str) -> np.array:
-    im = cv2.imread(f"data/TI/{fname}.png", cv2.COLOR_BGR2GRAY)
-    # Binarization
-    ret, target_img = cv2.threshold(im, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # Resize image
-    target_img = resize(target_img, (150, 150))
-    return target_img
-
-
-def to_binary(filename: str) -> np.array:
-    image = cv2.imread(f"{filename}")
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Binarization
-    _, th = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
-    return th / 255
-
-
-def generate_images(generator_path: str, shape: tuple, output_folder: str):
-    os.makedirs(output_folder, exist_ok=True)
-    # Load generator from saved model
-    generator = torch.load(generator_path)
-    generator.eval()
-
-    # Generating images for evaluation
-    z = Variable(torch.Tensor(np.random.normal(0, 1, shape)))
-    gen_imgs = generator(z)
-
-    for idx, im in enumerate(gen_imgs):
-        filename = f"{output_folder}/{time.time()}.png"
-        save_image(im.data, filename)
-        binary_image = to_binary(filename)
-
-        try:
-            dataset = np.loadtxt(f"bin/gan_results.out")
-            numpy_tensor = binary_image.squeeze().ravel()
-            new_TI = np.column_stack((dataset, numpy_tensor / 255))
-            np.savetxt(fname="bin/gan_results.out",
-                       X=new_TI)
-
-        except FileNotFoundError:
-            numpy_tensor = binary_image.squeeze().ravel()
-            np.savetxt(fname=f"bin/gan_results.out",
-                       X=numpy_tensor / 255)
