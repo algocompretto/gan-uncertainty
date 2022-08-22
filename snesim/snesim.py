@@ -162,11 +162,6 @@ def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997
 
     return eas
 
-def highlight_cell(x_coordinate, y_coordinate, axis=None, **kwargs):
-    rect = plt.Rectangle((x_coordinate - .5, y_coordinate - .5), 1, 1, fill=True, **kwargs)
-    axis = axis or plt.gca()
-    axis.add_patch(rect)
-    return rect
 
 def get_color_bar():
     cmap = mpl.colors.ListedColormap(['white', "black"])

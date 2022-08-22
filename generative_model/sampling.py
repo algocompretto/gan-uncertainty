@@ -226,12 +226,18 @@ def plots():
 
     file = read_conditional_samples("../snesim/data/snesim.out")["D"]
     realizations = file[:, 0].reshape(100, 150, 150)
+    np.save("data/realizations.npy", realizations, allow_pickle=True)
 
     print("[INFO] Loading simulations", end="\r")
     snesim_gen_realizations = concatenate_out_files("data/simulations/")
 
     proportions_comparison(realizations,
                        snesim_gen_realizations)
+
+    histplots(snesim_gen_realizations, dataframe)
+
+    mds_plots(snesim_realizations_path="../snesim/data/realizations.npy",
+            gan_realizations_path="data/realizations.npy")
 
 if __name__ == "__main__":
     seeds(69069)

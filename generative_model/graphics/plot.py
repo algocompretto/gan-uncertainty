@@ -6,13 +6,8 @@ import os
 import numpy as np
 import matplotlib as mpl
 import random
-
-
-def highlight_cell(x_coordinate, y_coordinate, axis=None, **kwargs):
-    rect = plt.Rectangle((x_coordinate - .5, y_coordinate - .5), 1, 1, fill=True, **kwargs)
-    axis = axis or plt.gca()
-    axis.add_patch(rect)
-    return rect
+from sklearn.manifold import MDS
+from sklearn.metrics.pairwise import manhattan_distances, euclidean_distances
 
 def get_color_bar():
     cmap = mpl.colors.ListedColormap(['white', "black"])
@@ -38,6 +33,7 @@ def get_color_bar():
     )
 
     return colorbar
+
 
 def etype_plot(dict_ti: pd.DataFrame):
     _data = dict_ti.copy()
@@ -65,6 +61,7 @@ def etype_plot(dict_ti: pd.DataFrame):
     # Saving images to .pdf format
     plt.grid(False)
     plt.savefig("data/results/etype.png", dpi=600, bbox_inches='tight')
+
 
 def calculate_uncertainty(dict_ti: pd.DataFrame):
     _data = dict_ti.copy()
@@ -129,11 +126,13 @@ def plot_realizations_grid(real):
         ax.imshow(image, cmap="gray", origin="lower")
     plt.savefig("data/results/simulation_grid.png", dpi=600, bbox_inches='tight')
 
+
 def get_sand_shale_proportion(image):
     image = image.reshape(-1)
     sand_prop = (len(np.where(image==1)[0]) / 150**2)*100
     shale_prop = (len(np.where(image==0)[0]) / 150**2)*100
     return sand_prop, shale_prop
+
 
 def proportions(real: numpy.ndarray) -> None:
     fig, ax = plt.subplots(figsize=(5.5, 4))
@@ -167,6 +166,7 @@ def proportions(real: numpy.ndarray) -> None:
     plt.title('SNESIM Generated Training Images proportions')
 
     plt.savefig("data/results/boxplot_snesim.png", dpi=600, bbox_inches='tight')
+
 
 def concatenate_out_files(directory: str):
     cat_array = []
@@ -234,6 +234,55 @@ def proportions_comparison(real: numpy.ndarray, fake:numpy.ndarray) -> None:
     ax[1].set_title('Training Images proportions (Proposed workflow)')
 
     plt.savefig("data/results/boxplot_snesim.png", dpi=600, bbox_inches='tight')
+
+
+def histplots(snesim_realizations, gan_dataframe):
+    import seaborn as sns
+
+    ti_dict = dict()
+    for idx, realization in enumerate(snesim_realizations):
+        ti_dict[f'ti_{idx+1}'] = np.array(realization.reshape(-1))
+
+    snesim_dataframe = pd.DataFrame(ti_dict)
+
+    data_snesim = calculate_uncertainty(snesim_dataframe)
+    data_gan = calculate_uncertainty(gan_dataframe)
+
+    sns.boxplot(data_snesim['u_min'], c='black')
+    sns.boxplot(data_gan['u_min'], c='green')
+    plt.title("Uncertainty histogram")
+
+    plt.legend(["Traditional workflow", "Proposed workflow"])
+    plt.savefig("data/results/histplot.png", dpi=600, bbox_inches='tight')
+
+
+def plot_mds(original, gan):
+    plt.style.use("seaborn")
+    fig, ax = plt.subplots(1, 1, figsize=(5.5, 4))
+    plt.scatter(x=gan[:, 0], y=gan[:, 1], color="limegreen")
+    plt.scatter(x=original[:, 0], y=original[:, 1], color="black")
+    plt.title("Multidimensional scaling")
+    plt.legend(["Proposed workflow", "Traditional workflow"],
+            bbox_to_anchor = (1.05, 0.5))
+    plt.savefig("data/results/mds.png", dpi=500, bbox_inches='tight')
+
+
+def mds_plots(snesim_realizations_path, gan_realizations_path):
+    traditional = np.load(snesim_realizations_path).reshape((100, -1))
+    proposed = np.load(gan_realizations_path).reshape((100, -1))
+
+    dist_euclid = euclidean_distances(proposed)
+    mds = MDS(metric=True, dissimilarity='precomputed', random_state=0)
+
+    # Get the embeddings
+    gan = mds.fit_transform(dist_euclid)
+
+    dist_euclid_or = euclidean_distances(traditional)
+    # Get the embeddings
+    original = mds.fit_transform(dist_euclid_or)
+
+    plot_mds(original, gan)
+
 
 def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997799) -> object:
     debug_level = 1
