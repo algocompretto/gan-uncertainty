@@ -248,8 +248,8 @@ def histplots(snesim_realizations, gan_dataframe):
     data_snesim = calculate_uncertainty(snesim_dataframe)
     data_gan = calculate_uncertainty(gan_dataframe)
 
-    sns.boxplot(data_snesim['u_min'], c='black')
-    sns.boxplot(data_gan['u_min'], c='green')
+    sns.histplot(data_snesim['u_min'], color='black')
+    sns.histplot(data_gan['u_min'], color='green')
     plt.title("Uncertainty histogram")
 
     plt.legend(["Traditional workflow", "Proposed workflow"])

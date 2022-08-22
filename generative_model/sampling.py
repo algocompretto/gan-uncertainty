@@ -14,6 +14,9 @@ from tqdm import tqdm
 from graphics.plot import *
 from torch.autograd import Variable
 
+n = 10
+MAX = 10
+
 def get_args():
     parser = argparse.ArgumentParser(description="Easily samples images from the Generator network!")
 
@@ -137,7 +140,7 @@ class GeneratorModel(nn.Module):
         return x
 
 
-def create_out_file(samples):
+def create_out_file(samples, n:int):
     for image in tqdm(samples,
                     desc="Saving samples from GAN, please wait...",
                     total=len(samples), colour='blue'):
@@ -161,13 +164,13 @@ def create_out_file(samples):
     
     # Saves 
     numpy_array = np.loadtxt("data/generated.out")
-    header_name = [f'ti_{idx}' for idx in range(numpy_array.reshape(100, 150, 150).shape[0])]
+    header_name = [f'ti_{idx}' for idx in range(numpy_array.reshape(n*MAX, 150, 150).shape[0])]
     header_name = f'\n'.join(header_name)
 
     # Save again with header
     np.savetxt(fname="data/generated.out",
                 X=numpy_array,
-                header=f"gan\n{numpy_array.reshape(100, 150, 150).shape[1]}\n{header_name}", comments="")
+                header=f"gan\n{numpy_array.reshape(n*MAX, 150, 150).shape[1]}\n{header_name}", comments="")
 
 
 def __create_folders():
@@ -175,10 +178,10 @@ def __create_folders():
     os.makedirs("data/parfiles", exist_ok=True)
     os.makedirs("data/simulations", exist_ok=True)
     os.makedirs("data/results", exist_ok=True)
+    os.makedirs("data/results", exist_ok=True)
 
 
 def create_ti_files(samples):
-    __create_folders()
     for idx, im in enumerate(samples):
         im = cv2.resize(im, (150, 150))
         image_resized = np.where(im > 0.5, 1, 0)
@@ -189,13 +192,13 @@ def create_ti_files(samples):
 
 def _execute_script(index: int):
     os.chdir("data/")
-    script = f"""echo 'parfiles/snesim_gan_1.par' | wine snesim.exe"""
+    script = f"""echo 'parfiles/snesim_gan_{index}.par' | wine snesim.exe"""
     os.system("bash -c '%s'" % script)
 
 
-def simulate(samples_array):
+def simulate(samples_array, n):
     seed_initial: int = 69069
-    n_reals = 100
+    n_reals = n*MAX
     seeds_list = gs.rseed_list(nseeds=n_reals, seed=seed_initial)
 
     for idx, image in enumerate(samples_array):
@@ -225,11 +228,11 @@ def plots():
     plot_realizations_grid(realizations)
 
     file = read_conditional_samples("../snesim/data/snesim.out")["D"]
-    realizations = file[:, 0].reshape(100, 150, 150)
-    np.save("data/realizations.npy", realizations, allow_pickle=True)
-
+    realizations = file[:, 0].reshape(10, 150, 150)
+    
     print("[INFO] Loading simulations", end="\r")
     snesim_gen_realizations = concatenate_out_files("data/simulations/")
+    np.save("data/realizations.npy", snesim_gen_realizations, allow_pickle=True)
 
     proportions_comparison(realizations,
                        snesim_gen_realizations)
@@ -242,6 +245,8 @@ def plots():
 if __name__ == "__main__":
     seeds(69069)
 
+    # Create folders and get parameters
+    __create_folders()
     param = get_args()
 
     latent_size = 100
@@ -251,28 +256,28 @@ if __name__ == "__main__":
 
     uncond = Unconditional(1, generator, latent_size, "normal")
 
-    if os.listdir("data/out_files") is None:
-        if param.num_samples<=100:
-            print("[INFO] Sampling images from GAN")
-            for i in range(1):
-                samples = uncond.create_unconditional_simulations(100, [i, i, i])
-            samples_arr = np.where(np.concatenate(samples, 0)*0.5+0.5 >= 0.5, 1.0, 0.0)
-        else:
-            pass
+    print("[INFO] Sampling images from GAN")
+    all_samples = []
 
-        print("[INFO] Images sampled!")
-        create_out_file(samples_arr)
+    import gc
+    for i in range(n):
+        samples = uncond.create_unconditional_simulations(MAX, [i, i, i])
+        all_samples.append(samples)
+        gc.collect()
+    samples = np.array(all_samples).reshape(n*MAX, 1, 128, 128)
+    samples_arr = np.where(np.concatenate(samples, 0)*0.5+0.5 >= 0.5, 1.0, 0.0)
 
-        # Performs SNESIM simulations
-        # Prepare each TI
-        create_ti_files(samples_arr)
+    print("[INFO] Images sampled!")
+    create_out_file(samples_arr, n)
 
-    if os.listdir("data/simulations") is None:
-        # Simulate
-        simulate(samples_arr)
+    # Performs SNESIM simulations
+    # Prepare each TI
+    create_ti_files(samples_arr)
+
+    # Simulated
+    simulate(samples_arr, n)
     
     # Starts plotting
-    os.makedirs("data/results", exist_ok=True)
     plots()
     
 
