@@ -239,7 +239,7 @@ def proportions_comparison(real: numpy.ndarray, fake:numpy.ndarray) -> None:
 def histplots(snesim_realizations, gan_dataframe):
     import seaborn as sns
 
-    fig, ax = plt.subplots(1, 2, figsize=(5.5, 4.5))
+    fig, ax = plt.subplots(1, 1, figsize=(5.5, 4.5))
 
     ti_dict = dict()
     for idx, realization in enumerate(snesim_realizations):
@@ -250,11 +250,12 @@ def histplots(snesim_realizations, gan_dataframe):
     data_snesim = calculate_uncertainty(snesim_dataframe)
     data_gan = calculate_uncertainty(gan_dataframe)
 
-    sns.histplot(data_snesim['u_min'], color='black')
-    sns.histplot(data_gan['u_min'], color='green')
+    sns.kdeplot(data_snesim['u_min'], color='black')
+    sns.kdeplot(data_gan['u_min'], color='green')
     plt.title("Uncertainty histogram")
 
-    plt.legend(["Traditional workflow", "Proposed workflow"])
+    plt.legend([f"Traditional workflow (Mean:{round(data_snesim['u_min'].mean()*100, 3)}%)",
+     f"Proposed workflow (Mean:{round(data_gan['u_min'].mean()*100, 3)}%)"])
     plt.savefig("data/results/histplot.png", dpi=600, bbox_inches='tight')
 
 

@@ -15,7 +15,7 @@ from tqdm import tqdm
 from graphics.plot import *
 from torch.autograd import Variable
 
-n = 2
+n = 20
 MAX = 10
 
 def get_args():
@@ -171,7 +171,7 @@ def create_out_file(samples, n:int):
     # Save again with header
     np.savetxt(fname="data/generated.out",
                 X=numpy_array,
-                header=f"gan\n{numpy_array.reshape(n*MAX, 150, 150).shape[1]}\n{header_name}", comments="")
+                header=f"gan\n{numpy_array.reshape(n*MAX, 150, 150).shape[1]}\n{header_name}", comments="", fmt="%1d")
 
 
 def __create_folders():
@@ -230,7 +230,7 @@ def plots():
     plot_realizations_grid(realizations)
 
     file = read_conditional_samples("../snesim/data/snesim.out")["D"]
-    realizations = file[:, 0].reshape(10, 150, 150)
+    realizations = file[:, 0].reshape(200, 150, 150)
     
     print("[INFO] Loading simulations", end="\r")
     snesim_gen_realizations = concatenate_out_files("data/simulations/")
@@ -239,7 +239,7 @@ def plots():
     proportions_comparison(realizations,
                        snesim_gen_realizations)
 
-    histplots(snesim_gen_realizations, dataframe)
+    histplots(realizations, dataframe)
 
     mds_plots(snesim_realizations_path="../snesim/data/realizations.npy",
             gan_realizations_path="data/realizations.npy")
