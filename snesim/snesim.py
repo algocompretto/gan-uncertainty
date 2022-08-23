@@ -32,7 +32,7 @@ def get_args():
     parser.add_argument('--output_path', default="data/snesim.out",
                         type=str, help='Training image path')
 
-    parser.add_argument('--realizations', default=10,
+    parser.add_argument('--realizations', default=50,
                         type=int, help='Number of realizations to simulate')
 
     parser.add_argument('--max_cond', default=30,
@@ -73,8 +73,8 @@ snesim.dbg{" "*30}- debugging file
 {arguments.seed}              - random number seed
 {arguments.max_cond}          - max number of conditioning primary data
 {arguments.min_cond}          - min. replicates number
-0	0{" "*30}     - condition to LP (0=no, 1=yes), flag for iauto
-1.0	1.0{" "*30}   - two weighting factors to combine P(A|B) and P(A|C)
+0   0{" "*30}     - condition to LP (0=no, 1=yes), flag for iauto
+1.0 1.0{" "*30}   - two weighting factors to combine P(A|B) and P(A|C)
 localprop.dat                 - file for local proportions
 0{" "*30}         - condition to rotation and affinity (0=no, 1=yes)
 rotangle.dat                  - file for rotation and affinity

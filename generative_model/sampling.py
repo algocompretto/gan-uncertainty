@@ -15,7 +15,7 @@ from tqdm import tqdm
 from graphics.plot import *
 from torch.autograd import Variable
 
-n = 20
+n = 5
 MAX = 10
 
 def get_args():
@@ -230,7 +230,7 @@ def plots():
     plot_realizations_grid(realizations)
 
     file = read_conditional_samples("../snesim/data/snesim.out")["D"]
-    realizations = file[:, 0].reshape(200, 150, 150)
+    realizations = file[:, 0].reshape(50, 150, 150)
     
     print("[INFO] Loading simulations", end="\r")
     snesim_gen_realizations = concatenate_out_files("data/simulations/")
