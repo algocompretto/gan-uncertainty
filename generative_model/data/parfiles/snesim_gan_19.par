@@ -17,7 +17,7 @@ simulations/snesim_19.out                - file for simulation output
 150    0.5    1.0             - nx,xmn,xsiz
 150    0.5    1.0             - ny,ymn,ysiz
 1     0.5    1.0              - nz,zmn,zsiz
-99932                        - random number seed
+100044                        - random number seed
 30                            - max number of conditioning primary data
 10                            - min. replicates number
 0     0                       - condtion to LP (0=no, 1=yes), flag for iauto

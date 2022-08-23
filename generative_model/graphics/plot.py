@@ -239,6 +239,8 @@ def proportions_comparison(real: numpy.ndarray, fake:numpy.ndarray) -> None:
 def histplots(snesim_realizations, gan_dataframe):
     import seaborn as sns
 
+    fig, ax = plt.subplots(1, 2, figsize=(5.5, 4.5))
+
     ti_dict = dict()
     for idx, realization in enumerate(snesim_realizations):
         ti_dict[f'ti_{idx+1}'] = np.array(realization.reshape(-1))

@@ -14,8 +14,8 @@ from tqdm import tqdm
 from graphics.plot import *
 from torch.autograd import Variable
 
-n = 10
-MAX = 10
+n = 2
+MAX = 70
 
 def get_args():
     parser = argparse.ArgumentParser(description="Easily samples images from the Generator network!")
@@ -215,6 +215,7 @@ def simulate(samples_array, n):
         _execute_script(idx)
         os.chdir("..")
 
+
 def plots():
     print("[INFO] Loading simulations", end="\r")
     realizations = concatenate_out_files("data/simulations/")
@@ -241,6 +242,7 @@ def plots():
 
     mds_plots(snesim_realizations_path="../snesim/data/realizations.npy",
             gan_realizations_path="data/realizations.npy")
+
 
 if __name__ == "__main__":
     seeds(69069)
@@ -280,4 +282,3 @@ if __name__ == "__main__":
     # Starts plotting
     plots()
     
-
