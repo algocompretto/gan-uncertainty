@@ -5,6 +5,7 @@ import re
 import cv2
 import torch
 import random
+import shutil
 import argparse
 import pygeostat as gs
 import numpy as np
@@ -15,7 +16,7 @@ from graphics.plot import *
 from torch.autograd import Variable
 
 n = 2
-MAX = 70
+MAX = 10
 
 def get_args():
     parser = argparse.ArgumentParser(description="Easily samples images from the Generator network!")
@@ -281,4 +282,7 @@ if __name__ == "__main__":
     
     # Starts plotting
     plots()
-    
+
+    # Remove unnecessary files after execution
+    shutil.rmtree("data/parfiles")
+    shutil.rmtree("data/out_files")  
