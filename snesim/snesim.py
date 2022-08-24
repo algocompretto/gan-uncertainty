@@ -16,7 +16,8 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 
 def get_args():
     parser = argparse.ArgumentParser(description='Perform easy SNESIM simulations with this CLI!')
-
+  || teste de tabela ||
+  || alo ||
     parser.add_argument('--samples_path', default="data/samples50",
                         type=str, help='Samples path')
 
@@ -30,7 +31,7 @@ def get_args():
                         type=str, help='SNESIM executable path')
 
     parser.add_argument('--output_path', default="data/snesim.out",
-                        type=str, help='Training image path')
+                        type=str, help='Output path')
 
     parser.add_argument('--realizations', default=50,
                         type=int, help='Number of realizations to simulate')
