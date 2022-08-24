@@ -29,7 +29,7 @@ Pre-requisites to run the script included in the `requirements.txt` file .
   ```
 <br><br>
 
-<h3 id="usage-snesim" > 👷 Running SNESIM simulations </h3>
+<h3 id="usage-snesim" > Running SNESIM simulations </h3>
 In the project folder, navigate to the `SNESIM` folder, and then execute the script with:
 
   ```bash
@@ -48,3 +48,22 @@ In the project folder, navigate to the `SNESIM` folder, and then execute the scr
 | `--min_cond`     | The minimum amount of points to use in the conditioning process.                               |
 | `--seed`         | The initial seed for the simulation.                                                           |
 | `--plot`         | A boolean value for whether you want to plot/save the results or not.                          |
+
+<h3 id="usage-gan" > Running the proposed workflow </h3>
+<h4>Training</h4>
+
+<h4>Sampling with pre-trained model</h4>
+
+
+<h2 id="citation" > ✍️ Citation </h2>
+If you use our code for your own research, we would be grateful if you cite our publication
+[LinkToBeInserted](https://github.com/)
+
+```
+@article{test2023,
+	title={Use of Generative Adversarial Networks to incorporate the Training Image Uncertainty in Multiple-Point Statistics Simulation},
+	author={Scholze, Gustavo and Bassani, Marcel},
+	journal={-},
+	year={2023}
+}
+```
