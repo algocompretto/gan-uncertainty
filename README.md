@@ -15,7 +15,7 @@
 <h2 id="results" > Results and discussion</h2>
 
   
-<h2 id="usage" > 👷 Usage </h2>
+<h3 id="usage" > 👷 Usage </h2>
 
 Pre-requisites to run the script included in the `requirements.txt` file .
 
@@ -49,8 +49,8 @@ In the project folder, navigate to the `SNESIM` folder, and then execute the scr
 | `--seed`         | The initial seed for the simulation.                                                           |
 | `--plot`         | A boolean value for whether you want to plot/save the results or not.                          |
 
-<h3 id="usage-gan" > Running the proposed workflow </h3>
-<h4>Training</h4>
+<h2 id="usage-gan" > Running the proposed workflow </h3>
+<h3>Training</h4>
 If you wish to train a new model on unseen data, you can follow the next steps:
 
 ```
@@ -76,7 +76,8 @@ The training will get all the information on hyperparameters from the `parameter
 | `n_critic`       | The number of steps to train the Critic after `n` iterations of the Generator.                 |
 
 
-<h4>Sampling with pre-trained model</h4>
+<h3>Sampling with pre-trained model</h4>
+
 
 
 <h2 id="citation" > ✍️ Citation </h2>
