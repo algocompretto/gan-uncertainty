@@ -232,7 +232,7 @@ def proportions_comparison(real: numpy.ndarray, fake:numpy.ndarray) -> None:
     ax[1].set_ylabel('Percentage (%)')
     ax[1].set_xlabel('Category')
     ax[1].set_title('Training Images proportions (Proposed workflow)')
-    plt.savefig("data/results/boxplot_snesim.png", dpi=600, bbox_inches='tight')
+    #plt.savefig("data/results/boxplot_snesim.png", dpi=600, bbox_inches='tight')
 
 
 def histplots(snesim_realizations, gan_dataframe):

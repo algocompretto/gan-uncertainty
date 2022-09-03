@@ -92,7 +92,7 @@ rotangle.dat                  - file for rotation and affinity
         parfile.write(parameter)
 
 def read_conditional_samples(filename: object = 'eas.dat', nanval: object = -997799) -> object:
-    debug_level = 1
+    debug_level = 0
     if not (os.path.isfile(filename)):
         print("Filename:'%s', does not exist" % filename)
 
