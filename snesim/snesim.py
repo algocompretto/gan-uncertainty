@@ -1,17 +1,9 @@
 import os
-import cv2
-import numpy
-import random
 import argparse
-import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 from typing import Any
-from matplotlib.lines import Line2D
-from mpl_toolkits.axes_grid1 import ImageGrid
 
 
 def get_args():
