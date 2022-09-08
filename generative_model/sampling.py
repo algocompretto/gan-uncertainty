@@ -13,7 +13,6 @@ import numpy as np
 import torch.nn as nn
 
 from tqdm import tqdm
-from graphics.plot import *
 from torch.autograd import Variable
 
 n = 1
@@ -257,32 +256,6 @@ def simulate(samples_array, n):
         os.chdir("..")
 
 
-def plots():
-    print("[INFO] Loading simulations", end="\r")
-    gan_realizations = concatenate_out_files("data/simulations/")
-    np.save("data/realizations.npy", gan_realizations, allow_pickle=True)
-
-    ti_dict = dict()
-    for idx, realization in enumerate(gan_realizations):
-        ti_dict[f"ti_{idx+1}"] = np.array(realization.reshape(-1))
-
-    gan_dataframe = pd.DataFrame(ti_dict)
-    plot_uncertainty(gan_dataframe)
-    plot_realizations_grid(gan_realizations)
-
-    file = read_conditional_samples("../snesim/data/snesim.out")["D"]
-    snesim_realizations = file[:, 0].reshape(100, 150, 150)
-
-    proportions_comparison(snesim_realizations, gan_realizations)
-
-    histplots(snesim_realizations, gan_dataframe)
-
-    mds_plots(
-        snesim_realizations_path="../snesim/data/realizations.npy",
-        gan_realizations_path="data/realizations.npy",
-    )
-
-
 if __name__ == "__main__":
     seeds(303255)
 
@@ -333,9 +306,6 @@ if __name__ == "__main__":
 
     # Simulated
     simulate(samples_arr, n)
-
-    # Starts plotting
-    plots()
 
     # Remove unnecessary files after execution
     shutil.rmtree("data/parfiles")
