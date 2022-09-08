@@ -26,11 +26,11 @@ The idea is to merge the generative model adeptness to learn spatial patterns wi
 
 Pre-requisites to run the script included in the `requirements.txt` file .
 
-  ```bash
-  git clone https://github.com/algocompretto/gan-for-mps.git
+  ```shell
+  git clone https://github.com/algocompretto/gan-uncertainty.git
   
   # Activates the environment and installs prerequisites
-  cd gan-for-mps/ && python3 -m venv .venv
+  cd gan-uncertainty/ && python3 -m venv .venv
   source .venv/bin/activate
   pip install -r requirements.txt
   ```
@@ -39,7 +39,7 @@ Pre-requisites to run the script included in the `requirements.txt` file .
 <h3 id="usage-snesim" > Running SNESIM simulations </h3>
 In the project folder, navigate to the `SNESIM` folder, and then execute the script with:
 
-  ```bash
+  ```shell
   python3 snesim.py --arguments
   ```
 
@@ -60,7 +60,7 @@ In the project folder, navigate to the `SNESIM` folder, and then execute the scr
 <h3>Training</h4>
 If you wish to train a new model on unseen data, you can follow the next steps:
 
-```
+```shell
 cd generative_model/
 python3 gan.py
 ```
