@@ -101,9 +101,9 @@ localprop.dat                 - file for local proportions
 0{" "*30}         - condition to rotation and affinity (0=no, 1=yes)
 rotangle.dat                  - file for rotation and affinity
 3{" "*30}         - number of affinity categories
-1.0  1.0  1.0                 - affinity factors (X,Y,Z)     
-1.0  0.6  1.0                 - affinity factors             
-1.0  2.0  1.0                 - affinity factors             
+1.0  1.0  1.0                 - affinity factors (X,Y,Z)
+1.0  0.6  1.0                 - affinity factors
+1.0  2.0  1.0                 - affinity factors
 6{" "*30}         - number of multiple grids
 {arguments.ti_path}           - file for training image
 250  250  1                   - training image dimensions: nxtr, nytr, nztr
