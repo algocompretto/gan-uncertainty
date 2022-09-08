@@ -5,7 +5,6 @@ import pandas as pd
 
 from typing import Any
 
-
 def get_args():
     parser = argparse.ArgumentParser(
         description="Perform easy SNESIM simulations with this CLI!"
