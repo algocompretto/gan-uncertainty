@@ -513,7 +513,7 @@ class Plots:
         box = seaborn.boxplot(
             data=sorted_vals, width=0.1, showfliers=False, meanline=True
         )
-
+        
         self.add_median_labels(box)
         plt.savefig("results/mds_distance.png", bbox_inches="tight", dpi=600)
 
@@ -544,8 +544,6 @@ class Plots:
 
     def mds(self):
         original, gan = self.mds_calculus()
-        x_t, y_t, z_t = original.T
-        x_p, y_p, z_p = gan.T
 
         trad_centroid = self.centroidnp(original)
         prop_centroid = self.centroidnp(gan)
