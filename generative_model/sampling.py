@@ -17,7 +17,7 @@ from torch.autograd import Variable
 
 n = 1
 MAX = 99
-
+BAD_EXAMPLES = list()
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -294,8 +294,14 @@ if __name__ == "__main__":
                 all_samples.append(real)
                 i = i + 1
                 gc.collect()
+            else:
+                BAD_EXAMPLES.append(real)
     samples = np.array(all_samples).reshape(100, 1, 128, 128)
     samples_arr = np.where(np.concatenate(samples, 0) * 1 >= 0.5, 1.0, 0.0)
+
+    # DEBUGGING BAD EXAMPLES
+    np_bad_ex = np.array(BAD_EXAMPLES)
+    np.save("bad.npz", np_bad_ex, allow_pickle=True)
 
     print("[INFO] Images sampled!")
     create_out_file(samples_arr, n)

@@ -17,7 +17,7 @@ from arch.models import CriticModel, GeneratorModel
 from torch.autograd import Variable
 from skimage.util import view_as_windows
 
-DEVICE = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Filtering warnings
 

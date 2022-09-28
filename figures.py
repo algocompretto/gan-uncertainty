@@ -10,10 +10,17 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import matplotlib.pylab as pylab
+params = {'legend.fontsize': 'small',
+         'axes.labelsize': 'medium',
+         'axes.titlesize':'medium',
+         'xtick.labelsize':'medium',
+         'ytick.labelsize':'medium'}
+pylab.rcParams.update(params)
+
 random.seed(69096)
 
-plt.style.use(["science", "nature", "bright", "no-latex"])
-
+plt.style.use(["science", "ieee", "bright"])
 
 class Handler(object):
     def __init__(self, color):
@@ -27,7 +34,7 @@ class Handler(object):
             width / 2.0,
             height,
             facecolor=self.color,
-            edgecolor="k",
+            edgecolor="none",
             transform=handlebox.get_transform(),
         )
         handlebox.add_artist(patch2)
@@ -36,15 +43,15 @@ class Handler(object):
 
 class Plots:
     def __init__(self) -> None:
-        self.figsize: Tuple = (5.5, 4)
+        self.figsize: Tuple = (3.5, 3.5)
         self.binary_cmap: str = "gray"
 
-        mpl.rcParams["savefig.dpi"] = 300
+        mpl.rcParams["savefig.dpi"] = 600
         mpl.rcParams["figure.dpi"] = 100
 
         self.reference_ti, self.samples = self.load_samples()
-        self.snesim = np.load("snesim/data/realizations.npy").reshape((100, 150, 150))
-        self.gan = np.load("generative_model/data/realizations.npy").reshape(
+        self.snesim = np.load("/home/gustavo/Github/gan-for-mps/snesim/data/realizations.npy").reshape((100, 150, 150))
+        self.gan = np.load("generative_model/data/realizations_old.npy").reshape(
             (100, 150, 150)
         )
         self.snesim_df, self.gan_df = self.get_dict_realizations()
@@ -76,6 +83,7 @@ class Plots:
         )
         self.gan_realizations_grid()
         self.mds()
+        self.histogram()
         return True
 
     def load_samples(self):
@@ -123,13 +131,12 @@ class Plots:
         fig, ax = plt.subplots(figsize=self.figsize)
 
         ax.imshow(ti, cmap=self.binary_cmap, origin="lower")
-        plt.title("Strebelle training image")
         plt.xlabel("X coordinate (m)")
         plt.ylabel("Y coordinate (m)")
 
         cb = self._get_categorical_cb()
         plt.grid(False)
-        plt.savefig("results/strebelle.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/strebelle_ti.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def location_map(self, reference_ti, samples):
         fig, ax = plt.subplots(1, 2, figsize=self.figsize, sharey=True)
@@ -149,11 +156,10 @@ class Plots:
         # Plotting the samples
         ax[1].set_title("Location map")
         ax[1].set_xlabel("X coordinate (m)")
-        # ax[1].set_ylabel("Y coordinate (m)")
         ax[1].grid(True, linestyle="--", color="black", linewidth=0.4)
 
         plt.gca().set_aspect("equal")
-        plt.savefig("results/location_map.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/sample_map.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def snesim_realizations_grid(self):
         rand_idx = [
@@ -175,7 +181,7 @@ class Plots:
         )
 
         cb = self._get_categorical_cb()
-        plt.suptitle("Traditional workflow - simulation results", y=0.99)
+        #plt.suptitle("Traditional workflow - simulation results", y=0.99)
 
         for ax, image in zip(image_grid, tis_sampled):
             # Reshapes image to desired size
@@ -187,7 +193,7 @@ class Plots:
             ax.set_xticks(range(0, 150, 50))
             ax.set_yticks(range(0, 150, 50))
         plt.grid(False)
-        plt.savefig("results/snesim_grid.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/snesim_grid.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def etype(self):
         fig = plt.figure(figsize=self.figsize)
@@ -203,7 +209,7 @@ class Plots:
             cbar_pad=0.15,
         )
 
-        plt.suptitle("E-type mean plot", y=0.99)
+        #plt.suptitle("E-type mean plot", y=0.99)
 
         # Labels and titles
         grid[0].set_title("Traditional workflow")
@@ -229,7 +235,7 @@ class Plots:
         plt.grid(False)
         fig.tight_layout()
         fig.subplots_adjust(top=1.25)
-        plt.savefig("results/etype.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/etype.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def std_plot(self):
         fig = plt.figure(figsize=self.figsize)
@@ -245,7 +251,7 @@ class Plots:
             cbar_pad=0.15,
         )
 
-        plt.suptitle("Standard deviation comparison", y=0.99)
+        #plt.suptitle("Standard deviation comparison", y=0.99)
 
         # Labels and titles
         grid[0].set_title("Traditional workflow")
@@ -271,7 +277,7 @@ class Plots:
         plt.grid(False)
         fig.tight_layout()
         fig.subplots_adjust(top=1.25)
-        plt.savefig("results/std_plot.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/std_plot.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def absolute_difference(self):
         fig, ax = plt.subplots(1, 1, figsize=self.figsize)
@@ -296,7 +302,7 @@ class Plots:
         cb.ax.get_yaxis()
         cb.set_label("Delta")
         plt.grid(False)
-        plt.savefig("results/absolute_diff.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/absolute_diff.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     @staticmethod
     def calculate_uncertainty(dict_ti: pd.DataFrame):
@@ -311,6 +317,23 @@ class Plots:
         _data.drop("prob_shale", axis=1, inplace=True)
 
         return _data
+
+    def histogram(self):
+        snesim_unc = calculate_uncertainty(self.snesim_df)
+        gan_unc = calculate_uncertainty(self.gan_df)
+
+
+        trad = [[val[-1], "Traditional"] for val in snesim_unc.values]
+        prop = [[val[-1], "Proposed"] for val in gan_unc.values]
+
+        df = pd.DataFrame([*trad, *prop], columns=["Value", "Workflow"])
+        fig = plt.figure(figsize=self.figsize)
+        seaborn.histplot(
+            data=df, x="Value", hue="Workflow", multiple="dodge", element="step"
+        )
+
+        #plt.title("Histogram for uncertainty values in both workflows")
+        plt.savefig("uncertainty_histogram.pdf", format="pdf", dpi=300, bbox_inch = 'tight', palette=["lightblue", "salmon"])
 
     def plot_uncertainty(self):
         snesim_unc = calculate_uncertainty(self.snesim_df)
@@ -329,7 +352,7 @@ class Plots:
             cbar_pad=0.15,
         )
 
-        plt.suptitle("Uncertainty comparison", y=0.99)
+        #plt.suptitle("Uncertainty comparison", y=0.99)
 
         # Labels and titles
         grid[0].set_title("Traditional workflow")
@@ -351,7 +374,7 @@ class Plots:
         plt.grid(False)
         fig.tight_layout()
         fig.subplots_adjust(top=1.25)
-        plt.savefig("results/uncertainty.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/uncertainty.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     @staticmethod
     def get_dicts(realization):
@@ -371,49 +394,42 @@ class Plots:
     def proportions_comparison(self, real: np.ndarray, fake: np.ndarray) -> None:
         import operator as op
 
-        fig, ax = plt.subplots(1, 2, figsize=self.figsize)
+        fig, ax = plt.subplots(1, 1, figsize=self.figsize)
         df_snesim = self.get_dicts(real)
         df_gan = self.get_dicts(fake)
-
-        plot_sand = {
-            "Traditional": list(df_snesim["Sand"].values),
-            "Proposed": list(df_gan["Sand"].values),
-        }
-
-        # sort keys and values together
-        sorted_keys, sorted_vals = zip(*sorted(plot_sand.items(), key=op.itemgetter(1)))
-        ax[0].set(title="Sand proportion", xlabel="Workflow", ylabel="Sand (%)")
-        seaborn.boxplot(data=sorted_vals, width=0.1, showfliers=False, ax=ax[0])
-        ax[0].set_xticks([])
-        ax[0].grid(True)
-
-        plot_shale = {
-            "Traditional": list(df_snesim["Shale"].values),
-            "Proposed": list(df_gan["Shale"].values),
-        }
-
-        # sort keys and values together
-        sorted_keys, sorted_vals = zip(
-            *sorted(plot_shale.items(), key=op.itemgetter(1))
-        )
-        ax[1].set(title="Shale proportion", xlabel="Workflow", ylabel="Shale (%)")
-        seaborn.boxplot(data=sorted_vals, width=0.1, showfliers=False, ax=ax[1])
-        ax[1].set_xticks([])
-        ax[1].grid(True)
-
-        plt.suptitle("Facies proportion for each workflow", y=0.99)
+        
         handles = [plt.Rectangle((0, 0), 1, 1) for i in range(4)]
         colors = ["cornflowerblue", "lightcoral"]
         hmap = dict(zip(handles, [Handler(color) for color in colors]))
 
+        sh_list = list()
+        sh_list.extend(df_snesim["Shale"].values)
+        sh_list.extend(df_gan["Shale"].values)
+
+        snd_list = list()
+        snd_list.extend(df_snesim["Sand"].values)
+        snd_list.extend(df_gan["Sand"].values)
+
+        df_super = {
+            "Shale": sh_list,
+            "Sand": snd_list,
+            "Workflow": ["Traditional"]*99 + ["Proposed"]*99
+        }
+        df_super = pd.DataFrame(df_super)
+        dd=pd.melt(df_super, id_vars=['Workflow'], value_vars=['Shale','Sand'], var_name='Facies')
+        seaborn.boxplot(x='Workflow', y='value', data=dd, hue='Facies')
+        ax.set_ylabel("Facies proportion in \%")
+
         plt.legend(
             handles=handles,
-            labels=["Traditional workflow", "Proposed workflow"],
+            labels=["Shale proportion", "Sand proportion"],
             handler_map=hmap,
-            bbox_to_anchor=(1.04, 0.5),
-            loc="center left",
+            bbox_to_anchor=(0, 1.02, 1, 0.2),
+            frameon=True,
+            loc="lower left",
+            mode="expand", ncol=2
         )
-        plt.savefig("results/proportions.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/proportions.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def gan_realizations_grid(self):
         rand_idx = [random.randint(0, len(self.gan) - 1) for _ in range(len(self.gan))]
@@ -434,7 +450,7 @@ class Plots:
 
         cb = self._get_categorical_cb()
 
-        plt.suptitle("Proposed workflow - simulation results", y=0.99)
+        #plt.suptitle("Proposed workflow - simulation results", y=0.99)
 
         for ax, image in zip(image_grid, tis_sampled):
             # Reshapes image to desired size
@@ -446,7 +462,7 @@ class Plots:
             # Adjust axis ticks
             ax.set_xticks(range(0, 150, 50))
             ax.set_yticks(range(0, 150, 50))
-        plt.savefig("results/gan_grid.png", bbox_inches="tight", dpi=600)
+        plt.savefig("results/gan_grid.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def mds_calculus(self):
         traditional = self.snesim.reshape(100, -1)
@@ -466,40 +482,12 @@ class Plots:
         length, dim = arr.shape
         return np.array([np.sum(arr[:, i]) / length for i in range(dim)])
 
-    @staticmethod
-    def add_median_labels(ax, fmt=".2f"):
-        import matplotlib.patheffects as path_effects
-
-        lines = ax.get_lines()
-        boxes = [c for c in ax.get_children() if type(c).__name__ == "PathPatch"]
-        lines_per_box = int(len(lines) / len(boxes))
-        for median in lines[4 : len(lines) : lines_per_box]:
-            x, y = (data.mean() for data in median.get_data())
-
-            # choose value depending on horizontal or vertical plot orientation
-            value = x if (median.get_xdata()[1] - median.get_xdata()[0]) == 0 else y
-            text = ax.text(
-                x,
-                y,
-                f"{value:{fmt}}",
-                ha="center",
-                va="center",
-                fontweight="bold",
-                color="white",
-            )
-
-            # create median-colored border around white text for contrast
-            text.set_path_effects(
-                [
-                    path_effects.Stroke(linewidth=3, foreground=median.get_color()),
-                    path_effects.Normal(),
-                ]
-            )
 
     def distance_boxplot(self, traditional, proposed):
         import operator as op
 
         fig, ax = plt.subplots(1, 1, figsize=self.figsize)
+
 
         plot_data = {
             "Traditional": traditional,
@@ -511,23 +499,24 @@ class Plots:
 
         ax.set(xlabel="Workflow", ylabel="Distance to centroid")
         box = seaborn.boxplot(
-            data=sorted_vals, width=0.1, showfliers=False, meanline=True
+            data=sorted_vals, width=0.1, showfliers=False
         )
-        
-        self.add_median_labels(box)
-        plt.savefig("results/mds_distance.png", bbox_inches="tight", dpi=600)
-
         # category labels
+        plt.text(0.1, 62.5, f'{round(np.mean(traditional), 2)}\%')
+        plt.text(1.1, 62.5, f'{round(np.mean(proposed), 2)}\%')
         plt.xticks(plt.xticks()[0], sorted_keys)
-        plt.title("Distribution of distances from each point to workflow centroid")
-        plt.grid(True)
+        
+
+        plt.savefig("results/mds_distance.pdf", format="pdf", bbox_inches="tight", dpi=300)
+
+        
 
     def mds3d(self, traditional_coord, proposed_coord):
         # set up a figure twice as wide as it is tall
         fig = plt.figure(figsize=self.figsize)
         ax = fig.add_subplot(1, 1, 1, projection="3d")
 
-        ax.set_title("3D Multidimensional Scaling")
+        #ax.set_title("3D Multidimensional Scaling")
         ax.set_xlabel("X dimension")
         ax.set_ylabel("Y dimension")
         ax.set_zlabel("Z dimension")
@@ -540,7 +529,8 @@ class Plots:
         ax.scatter3D(x_proposed, y_proposed, z_proposed)
 
         ax.legend(["Traditional workflow", "Proposed workflow"])
-        plt.savefig("results/mds3d.png", bbox_inches="tight", dpi=600)
+        plt.xlabel("Uncertainty values")
+        plt.savefig("results/mds3d.pdf", format="pdf", bbox_inches="tight", dpi=300)
 
     def mds(self):
         original, gan = self.mds_calculus()
